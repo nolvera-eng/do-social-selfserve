@@ -290,6 +290,60 @@ textarea {
   backdrop-filter: blur(4px);
 }
 
+.animated-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.preview-canvas.animated .animated-canvas {
+  opacity: 1;
+}
+
+.preview-canvas.animated .canvas-content {
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animated .canvas-headline {
+  animation: fadeInUp 1s ease forwards;
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+.animated .canvas-body {
+  animation: fadeInUp 1s ease forwards;
+  animation-delay: 1s;
+  opacity: 0;
+}
+
+.animated .canvas-cta {
+  animation: fadeInUp 1s ease forwards;
+  animation-delay: 1.5s;
+  opacity: 0;
+}
+
 @media (max-width: 1200px) {
   .container {
     grid-template-columns: 1fr;
@@ -318,6 +372,14 @@ textarea {
         <option value="thought">Thought Leadership</option>
         <option value="company">Company News</option>
       </select>
+    </div>
+
+    <div class="form-group">
+      <label>Type</label>
+      <div class="radio-group">
+        <div class="radio-btn active" data-type="static">Static</div>
+        <div class="radio-btn" data-type="animated">Animated</div>
+      </div>
     </div>
 
     <div class="form-group">
@@ -374,6 +436,7 @@ textarea {
 
   <div class="preview-area">
     <div class="preview-canvas square" id="preview">
+      <canvas class="animated-canvas" id="animCanvas"></canvas>
       <div class="canvas-bg"></div>
       <div class="canvas-content">
         <div class="canvas-logo">
@@ -448,6 +511,29 @@ document.getElementById('cta').addEventListener('change', (e) => {
   }
 });
 
+// Type switcher (Static vs Animated)
+let isAnimated = false;
+let animationFrame = null;
+
+document.querySelectorAll('.radio-btn[data-type]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.radio-btn[data-type]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const type = btn.dataset.type;
+    isAnimated = (type === 'animated');
+    const preview = document.getElementById('preview');
+
+    if (isAnimated) {
+      preview.classList.add('animated');
+      startAnimation();
+    } else {
+      preview.classList.remove('animated');
+      stopAnimation();
+    }
+  });
+});
+
 // Format switcher
 document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -458,7 +544,7 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
     const preview = document.getElementById('preview');
     const label = document.querySelector('.dimension-label');
 
-    preview.className = `preview-canvas ${format}`;
+    preview.className = `preview-canvas ${format}${isAnimated ? ' animated' : ''}`;
 
     const dimensions = {
       square: '1080 × 1080',
@@ -476,8 +562,76 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
       content.style.padding = '40px';
       previews.headline.style.fontSize = '32px';
     }
+
+    // Restart animation if active
+    if (isAnimated) {
+      stopAnimation();
+      startAnimation();
+    }
   });
 });
+
+// Simple animated background
+function startAnimation() {
+  const canvas = document.getElementById('animCanvas');
+  const ctx = canvas.getContext('2d');
+  const preview = document.getElementById('preview');
+
+  function resize() {
+    canvas.width = preview.offsetWidth;
+    canvas.height = preview.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let time = 0;
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Clear
+    ctx.clearRect(0, 0, w, h);
+
+    // Animated gradient glow
+    const centerY = h * 0.6;
+    const radius = Math.sin(time * 0.002) * 50 + 200;
+
+    const grad = ctx.createRadialGradient(w/2, centerY, 0, w/2, centerY, radius);
+    grad.addColorStop(0, 'rgba(48, 203, 217, 0.2)');
+    grad.addColorStop(1, 'rgba(48, 203, 217, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Floating particles
+    for (let i = 0; i < 20; i++) {
+      const x = (i * 50 + time * 0.3) % w;
+      const y = h * 0.6 + Math.sin((time + i * 100) * 0.001) * 100;
+      const size = 2 + Math.sin((time + i * 50) * 0.002) * 1;
+
+      ctx.fillStyle = `rgba(111, 224, 237, ${0.3 + Math.sin((time + i * 100) * 0.002) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    time++;
+    animationFrame = requestAnimationFrame(draw);
+  }
+
+  draw();
+}
+
+function stopAnimation() {
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+  }
+  const canvas = document.getElementById('animCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 
 // Content type presets
 document.getElementById('contentType').addEventListener('change', (e) => {

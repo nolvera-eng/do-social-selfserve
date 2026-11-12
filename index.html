@@ -280,6 +280,34 @@ textarea {
   margin-top: 20px;
 }
 
+.canvas-speaker {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(16, 75, 85, 0.3);
+  border: 1px solid var(--accent-deep);
+  border-radius: 4px;
+  display: none;
+}
+
+.canvas-speaker.visible {
+  display: block;
+}
+
+.canvas-speaker-name {
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.canvas-speaker-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-mid);
+  letter-spacing: 0.04em;
+}
+
 .info-box {
   background: var(--surface-2);
   border: 1px solid var(--accent-deep);
@@ -420,6 +448,12 @@ textarea {
       <div class="char-count"><span id="bodyCount">0</span>/120</div>
     </div>
 
+    <div class="form-group" id="speakerSection" style="display: none;">
+      <label>Speaker <span style="color: var(--text-dim);">(For events)</span></label>
+      <input type="text" id="speakerName" placeholder="Speaker name" maxlength="40">
+      <input type="text" id="speakerTitle" placeholder="Title/Company" maxlength="50" style="margin-top: 8px;">
+    </div>
+
     <div class="form-group">
       <label>Call to Action</label>
       <select id="cta">
@@ -459,6 +493,10 @@ textarea {
           <div class="canvas-eyebrow" id="previewEyebrow">NEW FEATURE</div>
           <div class="canvas-headline" id="previewHeadline">Your headline appears here</div>
           <div class="canvas-body" id="previewBody">Supporting details and context for your announcement.</div>
+          <div class="canvas-speaker" id="previewSpeaker">
+            <div class="canvas-speaker-name" id="previewSpeakerName">Speaker Name</div>
+            <div class="canvas-speaker-title" id="previewSpeakerTitle">Title, Company</div>
+          </div>
           <div class="canvas-cta" id="previewCta">Learn more</div>
         </div>
       </div>
@@ -826,6 +864,29 @@ document.getElementById('cta').addEventListener('change', (e) => {
   }
 });
 
+// Speaker updates
+const speakerNameInput = document.getElementById('speakerName');
+const speakerTitleInput = document.getElementById('speakerTitle');
+const previewSpeaker = document.getElementById('previewSpeaker');
+const previewSpeakerName = document.getElementById('previewSpeakerName');
+const previewSpeakerTitle = document.getElementById('previewSpeakerTitle');
+
+function updateSpeaker() {
+  const name = speakerNameInput.value.trim();
+  const title = speakerTitleInput.value.trim();
+
+  if (name || title) {
+    previewSpeakerName.textContent = name || 'Speaker Name';
+    previewSpeakerTitle.textContent = title || 'Title';
+    previewSpeaker.classList.add('visible');
+  } else {
+    previewSpeaker.classList.remove('visible');
+  }
+}
+
+speakerNameInput.addEventListener('input', updateSpeaker);
+speakerTitleInput.addEventListener('input', updateSpeaker);
+
 // Type switcher (Static vs Animated)
 let isAnimated = false;
 let animationFrame = null;
@@ -964,6 +1025,12 @@ function fallbackAnimation() {
 
 // Content type presets
 document.getElementById('contentType').addEventListener('change', (e) => {
+  const type = e.target.value;
+
+  // Show/hide speaker section for events
+  const speakerSection = document.getElementById('speakerSection');
+  speakerSection.style.display = (type === 'event') ? 'block' : 'none';
+
   const presets = {
     product: {
       eyebrow: 'NEW FEATURE',
@@ -975,7 +1042,9 @@ document.getElementById('contentType').addEventListener('change', (e) => {
       eyebrow: 'JOIN US',
       headline: '[Event Name] 2026',
       body: 'Connect with developers and industry leaders.',
-      cta: 'Register now'
+      cta: 'Register now',
+      speaker: 'Speaker Name',
+      speakerTitle: 'CTO, Company'
     },
     partnership: {
       eyebrow: 'PARTNERSHIP',
@@ -1003,12 +1072,18 @@ document.getElementById('contentType').addEventListener('change', (e) => {
     }
   };
 
-  const preset = presets[e.target.value];
+  const preset = presets[type];
   if (preset) {
     inputs.eyebrow.value = preset.eyebrow;
     inputs.headline.value = preset.headline;
     inputs.body.value = preset.body;
     document.getElementById('cta').value = preset.cta;
+
+    // Set speaker if event
+    if (type === 'event') {
+      document.getElementById('speakerName').value = preset.speaker || '';
+      document.getElementById('speakerTitle').value = preset.speakerTitle || '';
+    }
 
     // Trigger updates
     inputs.eyebrow.dispatchEvent(new Event('input'));

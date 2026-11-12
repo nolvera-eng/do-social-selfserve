@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DO Social Self-Serve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #000F0F;
+  --surface: #081F1E;
+  --surface-2: #13302E;
+  --rule: #1F403E;
+  --text-dim: #6F908C;
+  --text-mid: #9DB5B2;
+  --text: #E5ECEB;
+  --text-bright: #F4F5F5;
+  --accent: #6FE0ED;
+  --accent-mid: #30CBD9;
+  --accent-deep: #104B55;
+  --mono: "Geist Mono", monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  height: 100vh;
+}
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--rule);
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.preview-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  position: relative;
+}
+
+h1 {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+input[type="text"],
+textarea,
+select {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  border-radius: 4px;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent-deep);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.char-count {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.char-count.warning {
+  color: #D97706;
+}
+
+.char-count.error {
+  color: #DC2626;
+}
+
+.radio-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.radio-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-mid);
+  transition: all 0.15s ease;
+}
+
+.radio-btn:hover {
+  border-color: var(--accent-deep);
+  color: var(--text);
+}
+
+.radio-btn.active {
+  background: var(--accent-deep);
+  border-color: var(--accent);
+  color: var(--text-bright);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--ground);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.btn-primary:hover {
+  background: var(--accent-mid);
+}
+
+.preview-canvas {
+  background: var(--ground);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-canvas.square {
+  width: 540px;
+  height: 540px;
+}
+
+.preview-canvas.landscape {
+  width: 600px;
+  height: 314px;
+}
+
+.preview-canvas.story {
+  width: 324px;
+  height: 576px;
+}
+
+.canvas-content {
+  width: 100%;
+  height: 100%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.canvas-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 100% 80% at 50% 60%, rgba(48, 203, 217, 0.15) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.canvas-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  position: relative;
+  z-index: 1;
+}
+
+.canvas-logo-mark {
+  width: 24px;
+  height: 24px;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.canvas-content-body {
+  position: relative;
+  z-index: 1;
+}
+
+.canvas-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.canvas-headline {
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-bright);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.canvas-body {
+  font-size: 14px;
+  color: var(--text-mid);
+  line-height: 1.5;
+  max-width: 80%;
+}
+
+.canvas-cta {
+  background: var(--accent-deep);
+  border: 1px solid var(--accent);
+  color: var(--text-bright);
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  display: inline-block;
+  margin-top: 20px;
+}
+
+.info-box {
+  background: var(--surface-2);
+  border: 1px solid var(--accent-deep);
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 20px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.dimension-label {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 8px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+}
+
+.animated-canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.preview-canvas.animated .animated-canvas {
+  opacity: 1;
+}
+
+.preview-canvas.animated .canvas-content {
+  opacity: 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animated .canvas-headline {
+  animation: fadeInUp 1s ease forwards;
+  animation-delay: 0.5s;
+  opacity: 0;
+}
+
+.animated .canvas-body {
+  animation: fadeInUp 1s ease forwards;
+  animation-delay: 1s;
+  opacity: 0;
+}
+
+.animated .canvas-cta {
+  animation: fadeInUp 1s ease forwards;
+  animation-delay: 1.5s;
+  opacity: 0;
+}
+
+@media (max-width: 1200px) {
+  .container {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .preview-area {
+    min-height: 600px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="sidebar">
+    <h1>DO Social Self-Serve</h1>
+
+    <div class="form-group">
+      <label>Content Type</label>
+      <select id="contentType">
+        <option value="product">Product Launch</option>
+        <option value="event">Event</option>
+        <option value="partnership">Partnership</option>
+        <option value="hiring">Hiring</option>
+        <option value="thought">Thought Leadership</option>
+        <option value="company">Company News</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Type</label>
+      <div class="radio-group">
+        <div class="radio-btn active" data-type="static">Static</div>
+        <div class="radio-btn" data-type="animated">Animated</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Format</label>
+      <div class="radio-group">
+        <div class="radio-btn active" data-format="square">Square (1080×1080)</div>
+        <div class="radio-btn" data-format="landscape">Landscape (1200×628)</div>
+        <div class="radio-btn" data-format="story">Story (1080×1920)</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Eyebrow <span style="color: var(--text-dim);">(Optional)</span></label>
+      <input type="text" id="eyebrow" placeholder="NEW FEATURE · PRODUCT LAUNCH · EVENT" maxlength="40">
+      <div class="char-count"><span id="eyebrowCount">0</span>/40</div>
+    </div>
+
+    <div class="form-group">
+      <label>Headline</label>
+      <input type="text" id="headline" placeholder="Your main message here" maxlength="60">
+      <div class="char-count"><span id="headlineCount">0</span>/60</div>
+    </div>
+
+    <div class="form-group">
+      <label>Body <span style="color: var(--text-dim);">(Optional)</span></label>
+      <textarea id="body" placeholder="Supporting details..." maxlength="120"></textarea>
+      <div class="char-count"><span id="bodyCount">0</span>/120</div>
+    </div>
+
+    <div class="form-group">
+      <label>Call to Action</label>
+      <select id="cta">
+        <option value="">None</option>
+        <option value="Learn more">Learn more</option>
+        <option value="Get started">Get started</option>
+        <option value="Try now">Try now</option>
+        <option value="Read more">Read more</option>
+        <option value="Sign up">Sign up</option>
+        <option value="Join us">Join us</option>
+        <option value="Register now">Register now</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="generateAsset()">Generate Asset</button>
+
+    <div class="info-box">
+      <strong style="color: var(--accent);">Brand Guidelines Applied:</strong><br>
+      • Typography: Geist Mono<br>
+      • Colors: Deep/Foam system<br>
+      • Dark-first design<br>
+      • Logo placement per brand rules
+    </div>
+  </div>
+
+  <div class="preview-area">
+    <div class="preview-canvas square" id="preview">
+      <canvas class="animated-canvas" id="animCanvas"></canvas>
+      <div class="canvas-bg"></div>
+      <div class="canvas-content">
+        <div class="canvas-logo">
+          <div class="canvas-logo-mark"></div>
+          <span>DigitalOcean</span>
+        </div>
+
+        <div class="canvas-content-body">
+          <div class="canvas-eyebrow" id="previewEyebrow">NEW FEATURE</div>
+          <div class="canvas-headline" id="previewHeadline">Your headline appears here</div>
+          <div class="canvas-body" id="previewBody">Supporting details and context for your announcement.</div>
+          <div class="canvas-cta" id="previewCta">Learn more</div>
+        </div>
+      </div>
+      <div class="dimension-label">1080 × 1080</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Character counters
+const inputs = {
+  eyebrow: document.getElementById('eyebrow'),
+  headline: document.getElementById('headline'),
+  body: document.getElementById('body')
+};
+
+const previews = {
+  eyebrow: document.getElementById('previewEyebrow'),
+  headline: document.getElementById('previewHeadline'),
+  body: document.getElementById('previewBody'),
+  cta: document.getElementById('previewCta')
+};
+
+const counts = {
+  eyebrow: document.getElementById('eyebrowCount'),
+  headline: document.getElementById('headlineCount'),
+  body: document.getElementById('bodyCount')
+};
+
+// Update character counts
+Object.keys(inputs).forEach(key => {
+  inputs[key].addEventListener('input', (e) => {
+    const count = e.target.value.length;
+    const max = parseInt(e.target.maxLength);
+    counts[key].textContent = count;
+
+    const countEl = counts[key].parentElement;
+    countEl.classList.remove('warning', 'error');
+    if (count > max * 0.9) countEl.classList.add('warning');
+    if (count >= max) countEl.classList.add('error');
+
+    // Update preview
+    if (previews[key]) {
+      if (e.target.value.trim()) {
+        previews[key].textContent = e.target.value;
+        previews[key].style.display = 'block';
+      } else {
+        previews[key].style.display = 'none';
+      }
+    }
+  });
+});
+
+// CTA update
+document.getElementById('cta').addEventListener('change', (e) => {
+  if (e.target.value) {
+    previews.cta.textContent = e.target.value;
+    previews.cta.style.display = 'inline-block';
+  } else {
+    previews.cta.style.display = 'none';
+  }
+});
+
+// Type switcher (Static vs Animated)
+let isAnimated = false;
+let animationFrame = null;
+
+document.querySelectorAll('.radio-btn[data-type]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.radio-btn[data-type]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const type = btn.dataset.type;
+    isAnimated = (type === 'animated');
+    const preview = document.getElementById('preview');
+
+    if (isAnimated) {
+      preview.classList.add('animated');
+      startAnimation();
+    } else {
+      preview.classList.remove('animated');
+      stopAnimation();
+    }
+  });
+});
+
+// Format switcher
+document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.radio-btn[data-format]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const format = btn.dataset.format;
+    const preview = document.getElementById('preview');
+    const label = document.querySelector('.dimension-label');
+
+    preview.className = `preview-canvas ${format}${isAnimated ? ' animated' : ''}`;
+
+    const dimensions = {
+      square: '1080 × 1080',
+      landscape: '1200 × 628',
+      story: '1080 × 1920'
+    };
+    label.textContent = dimensions[format];
+
+    // Adjust layout for story format
+    const content = preview.querySelector('.canvas-content');
+    if (format === 'story') {
+      content.style.padding = '32px';
+      previews.headline.style.fontSize = '28px';
+    } else {
+      content.style.padding = '40px';
+      previews.headline.style.fontSize = '32px';
+    }
+
+    // Restart animation if active
+    if (isAnimated) {
+      stopAnimation();
+      startAnimation();
+    }
+  });
+});
+
+// Simple animated background
+function startAnimation() {
+  const canvas = document.getElementById('animCanvas');
+  const ctx = canvas.getContext('2d');
+  const preview = document.getElementById('preview');
+
+  function resize() {
+    canvas.width = preview.offsetWidth;
+    canvas.height = preview.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let time = 0;
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Clear
+    ctx.clearRect(0, 0, w, h);
+
+    // Animated gradient glow
+    const centerY = h * 0.6;
+    const radius = Math.sin(time * 0.002) * 50 + 200;
+
+    const grad = ctx.createRadialGradient(w/2, centerY, 0, w/2, centerY, radius);
+    grad.addColorStop(0, 'rgba(48, 203, 217, 0.2)');
+    grad.addColorStop(1, 'rgba(48, 203, 217, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Floating particles
+    for (let i = 0; i < 20; i++) {
+      const x = (i * 50 + time * 0.3) % w;
+      const y = h * 0.6 + Math.sin((time + i * 100) * 0.001) * 100;
+      const size = 2 + Math.sin((time + i * 50) * 0.002) * 1;
+
+      ctx.fillStyle = `rgba(111, 224, 237, ${0.3 + Math.sin((time + i * 100) * 0.002) * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(x, y, size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    time++;
+    animationFrame = requestAnimationFrame(draw);
+  }
+
+  draw();
+}
+
+function stopAnimation() {
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+  }
+  const canvas = document.getElementById('animCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Content type presets
+document.getElementById('contentType').addEventListener('change', (e) => {
+  const presets = {
+    product: {
+      eyebrow: 'NEW FEATURE',
+      headline: 'Introducing [Product Name]',
+      body: 'Built for developers who need performance and simplicity.',
+      cta: 'Learn more'
+    },
+    event: {
+      eyebrow: 'JOIN US',
+      headline: '[Event Name] 2026',
+      body: 'Connect with developers and industry leaders.',
+      cta: 'Register now'
+    },
+    partnership: {
+      eyebrow: 'PARTNERSHIP',
+      headline: 'DigitalOcean × [Partner]',
+      body: 'Bringing powerful tools to developers everywhere.',
+      cta: 'Learn more'
+    },
+    hiring: {
+      eyebrow: 'WE\'RE HIRING',
+      headline: 'Join the team',
+      body: 'Help us build the cloud for developers.',
+      cta: 'See openings'
+    },
+    thought: {
+      eyebrow: 'ENGINEERING',
+      headline: '[Topic]: A Deep Dive',
+      body: 'Technical insights from our engineering team.',
+      cta: 'Read more'
+    },
+    company: {
+      eyebrow: 'ANNOUNCEMENT',
+      headline: '[Company News]',
+      body: '',
+      cta: 'Read more'
+    }
+  };
+
+  const preset = presets[e.target.value];
+  if (preset) {
+    inputs.eyebrow.value = preset.eyebrow;
+    inputs.headline.value = preset.headline;
+    inputs.body.value = preset.body;
+    document.getElementById('cta').value = preset.cta;
+
+    // Trigger updates
+    inputs.eyebrow.dispatchEvent(new Event('input'));
+    inputs.headline.dispatchEvent(new Event('input'));
+    inputs.body.dispatchEvent(new Event('input'));
+    document.getElementById('cta').dispatchEvent(new Event('change'));
+  }
+});
+
+function generateAsset() {
+  alert('In production, this would:\n\n1. Generate high-res PNGs (2x)\n2. Export to Figma\n3. Save to asset library\n4. Create download link\n\nFor now, take a screenshot of the preview!');
+}
+
+// Initialize with default preset
+document.getElementById('contentType').dispatchEvent(new Event('change'));
+</script>
+
+</body>
+</html>

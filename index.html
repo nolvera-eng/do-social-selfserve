@@ -571,7 +571,7 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
   });
 });
 
-// Simple animated background
+// Simplified terrain animation
 function startAnimation() {
   const canvas = document.getElementById('animCanvas');
   const ctx = canvas.getContext('2d');
@@ -586,6 +586,21 @@ function startAnimation() {
 
   let time = 0;
 
+  // Generate terrain profile
+  function generateTerrain(points, baseY, amplitude) {
+    const terrain = [];
+    for (let i = 0; i < points; i++) {
+      const x = (i / points) * canvas.width;
+      // Multiple sine waves for natural look
+      const y = baseY +
+        Math.sin(i * 0.03 + time * 0.002) * amplitude * 0.5 +
+        Math.sin(i * 0.07 - time * 0.001) * amplitude * 0.3 +
+        Math.sin(i * 0.15 + time * 0.0015) * amplitude * 0.2;
+      terrain.push({x, y});
+    }
+    return terrain;
+  }
+
   function draw() {
     const w = canvas.width;
     const h = canvas.height;
@@ -594,27 +609,55 @@ function startAnimation() {
     ctx.clearRect(0, 0, w, h);
 
     // Animated gradient glow
-    const centerY = h * 0.6;
-    const radius = Math.sin(time * 0.002) * 50 + 200;
-
-    const grad = ctx.createRadialGradient(w/2, centerY, 0, w/2, centerY, radius);
-    grad.addColorStop(0, 'rgba(48, 203, 217, 0.2)');
+    const glowY = h * 0.65;
+    const glowSize = h * 0.6 + Math.sin(time * 0.001) * 50;
+    const grad = ctx.createRadialGradient(w/2, glowY, 0, w/2, glowY, glowSize);
+    grad.addColorStop(0, 'rgba(135, 155, 66, 0.15)'); // warm glow
+    grad.addColorStop(0.5, 'rgba(48, 203, 217, 0.1)'); // cool accent
     grad.addColorStop(1, 'rgba(48, 203, 217, 0)');
-
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Floating particles
-    for (let i = 0; i < 20; i++) {
-      const x = (i * 50 + time * 0.3) % w;
-      const y = h * 0.6 + Math.sin((time + i * 100) * 0.001) * 100;
-      const size = 2 + Math.sin((time + i * 50) * 0.002) * 1;
+    // Draw three terrain layers (parallax)
+    const layers = [
+      { points: 80, baseY: h * 0.75, amp: h * 0.08, color: 'rgba(16, 75, 85, 0.3)', width: 1 },
+      { points: 60, baseY: h * 0.68, amp: h * 0.12, color: 'rgba(48, 203, 217, 0.5)', width: 1.5 },
+      { points: 40, baseY: h * 0.60, amp: h * 0.15, color: 'rgba(111, 224, 237, 0.8)', width: 2 }
+    ];
 
-      ctx.fillStyle = `rgba(111, 224, 237, ${0.3 + Math.sin((time + i * 100) * 0.002) * 0.3})`;
+    layers.forEach((layer, idx) => {
+      const terrain = generateTerrain(layer.points, layer.baseY, layer.amp);
+
+      // Draw wireframe terrain
+      ctx.strokeStyle = layer.color;
+      ctx.lineWidth = layer.width;
       ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fill();
-    }
+
+      // Horizontal lines
+      ctx.moveTo(terrain[0].x, terrain[0].y);
+      for (let i = 1; i < terrain.length; i++) {
+        ctx.lineTo(terrain[i].x, terrain[i].y);
+      }
+      ctx.stroke();
+
+      // Vertical lines (every 3rd point)
+      for (let i = 0; i < terrain.length; i += 3) {
+        ctx.beginPath();
+        ctx.moveTo(terrain[i].x, terrain[i].y);
+        ctx.lineTo(terrain[i].x, h);
+        ctx.stroke();
+      }
+
+      // Add dots at peaks
+      terrain.forEach((point, i) => {
+        if (i % 3 === 0) {
+          ctx.fillStyle = layer.color;
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, layer.width, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+    });
 
     time++;
     animationFrame = requestAnimationFrame(draw);

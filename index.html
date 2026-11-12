@@ -793,7 +793,7 @@ function initTerrainAnimation(canvas) {
 
   function render() {
     const mt = time * 0.01;
-    const az = (mt / 12) * Math.PI * 2;
+    const az = (mt / 90) * Math.PI * 2;
     const bob = Math.sin(az) * 7;
     const eye = [Math.sin(az) * ORBIT_R, CAM_Y + bob, Math.cos(az) * ORBIT_R];
     const view = lookAt(eye, [0, LOOK_Y, 0], [0, 1, 0]);

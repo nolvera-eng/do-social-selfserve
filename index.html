@@ -893,15 +893,23 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
 // WebGL Terrain Animation
 function startAnimation() {
   const canvas = document.getElementById('animCanvas');
+  console.log('Starting animation...', canvas);
 
   try {
     terrainRenderer = initTerrainAnimation(canvas);
+    console.log('Terrain renderer:', terrainRenderer);
 
     if (!terrainRenderer) {
       console.warn('WebGL terrain failed to initialize, falling back to simple animation');
       fallbackAnimation();
       return;
     }
+
+    // Ensure canvas is sized
+    const preview = document.getElementById('preview');
+    canvas.width = preview.offsetWidth;
+    canvas.height = preview.offsetHeight;
+    console.log('Canvas size:', canvas.width, 'x', canvas.height);
 
     terrainRenderer.resize();
 
@@ -911,6 +919,7 @@ function startAnimation() {
       animationFrame = requestAnimationFrame(animate);
     }
 
+    console.log('Starting animation loop...');
     animate();
   } catch (e) {
     console.error('Terrain animation error:', e);

@@ -451,7 +451,7 @@ textarea {
 
   <div class="preview-area">
     <div class="preview-canvas square" id="preview">
-      <canvas class="animated-canvas" id="animCanvas"></canvas>
+      <canvas class="animated-canvas" id="animCanvas" width="1080" height="1080"></canvas>
       <div class="canvas-bg"></div>
       <div class="canvas-content">
         <div class="canvas-logo">
@@ -471,7 +471,11 @@ textarea {
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initTerrainAnimation } from './terrain-webgl.js';
+
+let terrainRenderer = null;
+
 // Character counters
 const inputs = {
   eyebrow: document.getElementById('eyebrow'),
@@ -586,99 +590,32 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
   });
 });
 
-// Simplified terrain animation
+// WebGL Terrain Animation
 function startAnimation() {
   const canvas = document.getElementById('animCanvas');
-  const ctx = canvas.getContext('2d');
-  const preview = document.getElementById('preview');
 
-  function resize() {
-    canvas.width = preview.offsetWidth;
-    canvas.height = preview.offsetHeight;
-  }
-  resize();
-  window.addEventListener('resize', resize);
+  try {
+    terrainRenderer = initTerrainAnimation(canvas);
 
-  let time = 0;
-
-  // Generate terrain profile
-  function generateTerrain(points, baseY, amplitude) {
-    const terrain = [];
-    for (let i = 0; i < points; i++) {
-      const x = (i / points) * canvas.width;
-      // Multiple sine waves for natural look
-      const y = baseY +
-        Math.sin(i * 0.03 + time * 0.002) * amplitude * 0.5 +
-        Math.sin(i * 0.07 - time * 0.001) * amplitude * 0.3 +
-        Math.sin(i * 0.15 + time * 0.0015) * amplitude * 0.2;
-      terrain.push({x, y});
+    if (!terrainRenderer) {
+      console.warn('WebGL terrain failed to initialize, falling back to simple animation');
+      fallbackAnimation();
+      return;
     }
-    return terrain;
+
+    terrainRenderer.resize();
+
+    function animate() {
+      if (!terrainRenderer) return;
+      terrainRenderer.render();
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    animate();
+  } catch (e) {
+    console.error('Terrain animation error:', e);
+    fallbackAnimation();
   }
-
-  function draw() {
-    const w = canvas.width;
-    const h = canvas.height;
-
-    // Clear
-    ctx.clearRect(0, 0, w, h);
-
-    // Animated gradient glow
-    const glowY = h * 0.65;
-    const glowSize = h * 0.6 + Math.sin(time * 0.001) * 50;
-    const grad = ctx.createRadialGradient(w/2, glowY, 0, w/2, glowY, glowSize);
-    grad.addColorStop(0, 'rgba(135, 155, 66, 0.15)'); // warm glow
-    grad.addColorStop(0.5, 'rgba(48, 203, 217, 0.1)'); // cool accent
-    grad.addColorStop(1, 'rgba(48, 203, 217, 0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Draw three terrain layers (parallax)
-    const layers = [
-      { points: 80, baseY: h * 0.75, amp: h * 0.08, color: 'rgba(16, 75, 85, 0.3)', width: 1 },
-      { points: 60, baseY: h * 0.68, amp: h * 0.12, color: 'rgba(48, 203, 217, 0.5)', width: 1.5 },
-      { points: 40, baseY: h * 0.60, amp: h * 0.15, color: 'rgba(111, 224, 237, 0.8)', width: 2 }
-    ];
-
-    layers.forEach((layer, idx) => {
-      const terrain = generateTerrain(layer.points, layer.baseY, layer.amp);
-
-      // Draw wireframe terrain
-      ctx.strokeStyle = layer.color;
-      ctx.lineWidth = layer.width;
-      ctx.beginPath();
-
-      // Horizontal lines
-      ctx.moveTo(terrain[0].x, terrain[0].y);
-      for (let i = 1; i < terrain.length; i++) {
-        ctx.lineTo(terrain[i].x, terrain[i].y);
-      }
-      ctx.stroke();
-
-      // Vertical lines (every 3rd point)
-      for (let i = 0; i < terrain.length; i += 3) {
-        ctx.beginPath();
-        ctx.moveTo(terrain[i].x, terrain[i].y);
-        ctx.lineTo(terrain[i].x, h);
-        ctx.stroke();
-      }
-
-      // Add dots at peaks
-      terrain.forEach((point, i) => {
-        if (i % 3 === 0) {
-          ctx.fillStyle = layer.color;
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, layer.width, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-    });
-
-    time++;
-    animationFrame = requestAnimationFrame(draw);
-  }
-
-  draw();
 }
 
 function stopAnimation() {
@@ -686,9 +623,38 @@ function stopAnimation() {
     cancelAnimationFrame(animationFrame);
     animationFrame = null;
   }
+  terrainRenderer = null;
+
+  const canvas = document.getElementById('animCanvas');
+  const gl = canvas.getContext('webgl2');
+  if (gl) {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  }
+}
+
+// Fallback for browsers without WebGL2
+function fallbackAnimation() {
   const canvas = document.getElementById('animCanvas');
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let time = 0;
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    // Simple glow
+    const grad = ctx.createRadialGradient(w/2, h*0.6, 0, w/2, h*0.6, h*0.5);
+    grad.addColorStop(0, 'rgba(48, 203, 217, 0.15)');
+    grad.addColorStop(1, 'rgba(48, 203, 217, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    time++;
+    animationFrame = requestAnimationFrame(draw);
+  }
+
+  draw();
 }
 
 // Content type presets

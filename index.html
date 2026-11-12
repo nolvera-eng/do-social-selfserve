@@ -784,7 +784,7 @@ function initTerrainAnimation(canvas) {
       gl.uniform2f(gl.getUniformLocation(p, 'uRes'), W, H);
     }
     gl.useProgram(prog);
-    gl.uniform1f(U('uLW'), 0.8); // 1px thin wireframe
+    gl.uniform1f(U('uLW'), 0.75); // 1px thin wireframe
   }
 
   resize();

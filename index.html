@@ -210,7 +210,11 @@ textarea {
 .canvas-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 0%, rgba(48, 203, 217, 0.12) 50%, transparent 100%);
+  background: linear-gradient(180deg,
+    rgba(16, 75, 85, 0.6) 0%,
+    rgba(48, 203, 217, 0.4) 30%,
+    rgba(139, 92, 246, 0.3) 70%,
+    rgba(219, 112, 147, 0.4) 100%);
   pointer-events: none;
 }
 
@@ -298,7 +302,27 @@ textarea {
 /* Speaker Section */
 .canvas-speaker {
   margin-top: 32px;
-  display: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.canvas-speaker-photo-container {
+  flex-shrink: 0;
+}
+
+.canvas-speaker-photo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #6FE0ED 0%, #DB7093 100%);
+  padding: 2px;
+}
+
+.canvas-speaker-info {
+  flex: 1;
 }
 
 .canvas-speaker-label {
@@ -421,8 +445,8 @@ textarea {
     <div class="form-group">
       <label>Content Type</label>
       <select id="contentType">
+        <option value="event" selected>Event / Speaker Card</option>
         <option value="product">Product Launch</option>
-        <option value="event">Event / Speaker Card</option>
         <option value="partnership">Partnership</option>
         <option value="quote">Customer Quote</option>
         <option value="hiring">Hiring</option>
@@ -508,6 +532,10 @@ textarea {
 
       <label style="margin-top: 12px;">Speaker Title</label>
       <input type="text" id="speakerTitle" placeholder="Inference Engineer, DigitalOcean" maxlength="60">
+
+      <label style="margin-top: 12px;">Speaker Photo <span style="color: var(--text-dim);">(Optional)</span></label>
+      <input type="file" id="speakerPhoto" accept="image/*" style="padding: 8px;">
+      <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Square photos work best (1:1 ratio)</div>
     </div>
 
     <div class="form-group">
@@ -571,9 +599,14 @@ textarea {
 
           <!-- Speaker Section -->
           <div class="canvas-speaker" id="previewSpeaker" style="display: none;">
-            <div class="canvas-speaker-label">SPEAKER</div>
-            <div class="canvas-speaker-name" id="previewSpeakerName">Speaker Name</div>
-            <div class="canvas-speaker-title" id="previewSpeakerTitle">Title, Company</div>
+            <div class="canvas-speaker-photo-container">
+              <img id="previewSpeakerPhoto" class="canvas-speaker-photo" src="" alt="" style="display: none;">
+            </div>
+            <div class="canvas-speaker-info">
+              <div class="canvas-speaker-label">SPEAKER</div>
+              <div class="canvas-speaker-name" id="previewSpeakerName">Speaker Name</div>
+              <div class="canvas-speaker-title" id="previewSpeakerTitle">Title, Company</div>
+            </div>
           </div>
 
           <div class="canvas-cta" id="previewCta">Learn more</div>
@@ -995,6 +1028,26 @@ if (sessionTypeInput) sessionTypeInput.addEventListener('input', updateEventFiel
 if (eventLocationInput) eventLocationInput.addEventListener('input', updateEventFields);
 if (speakerNameInput) speakerNameInput.addEventListener('input', updateEventFields);
 if (speakerTitleInput) speakerTitleInput.addEventListener('input', updateEventFields);
+
+// Speaker photo upload
+const speakerPhotoInput = document.getElementById('speakerPhoto');
+const previewSpeakerPhoto = document.getElementById('previewSpeakerPhoto');
+
+if (speakerPhotoInput) {
+  speakerPhotoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        previewSpeakerPhoto.src = event.target.result;
+        previewSpeakerPhoto.style.display = 'block';
+        // Also show the speaker section when photo is added
+        updateEventFields();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
 
 // Type switcher (Static vs Animated)
 let isAnimated = false;

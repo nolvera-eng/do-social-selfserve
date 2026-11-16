@@ -399,12 +399,36 @@ textarea {
       <label>Content Type</label>
       <select id="contentType">
         <option value="product">Product Launch</option>
-        <option value="event">Event</option>
+        <option value="event">Event / Speaker Card</option>
         <option value="partnership">Partnership</option>
+        <option value="quote">Customer Quote</option>
         <option value="hiring">Hiring</option>
         <option value="thought">Thought Leadership</option>
         <option value="company">Company News</option>
       </select>
+    </div>
+
+    <!-- Product Launch Options -->
+    <div class="form-group" id="productOptions" style="display: none;">
+      <label>
+        <input type="checkbox" id="dayZeroBadge" style="width: auto; margin-right: 8px;">
+        Show "DAY 0" badge
+      </label>
+      <label style="margin-top: 12px;">Partner Logo URL <span style="color: var(--text-dim);">(Optional)</span></label>
+      <input type="text" id="partnerLogo" placeholder="https://partner.com/logo.svg">
+    </div>
+
+    <!-- Customer Quote Options -->
+    <div class="form-group" id="quoteOptions" style="display: none;">
+      <label>Customer/Partner Name</label>
+      <input type="text" id="customerName" placeholder="Company name" maxlength="40">
+      <label style="margin-top: 12px;">Quote Text</label>
+      <textarea id="quoteText" placeholder="Customer testimonial or quote..." maxlength="300" rows="5"></textarea>
+      <div class="char-count"><span id="quoteCount">0</span>/300</div>
+      <label style="margin-top: 12px;">Attribution Name</label>
+      <input type="text" id="attributionName" placeholder="Person's name" maxlength="40">
+      <label style="margin-top: 12px;">Attribution Title</label>
+      <input type="text" id="attributionTitle" placeholder="Title & Company" maxlength="60">
     </div>
 
     <div class="form-group">
@@ -826,7 +850,8 @@ function initTerrainAnimation(canvas) {
 const inputs = {
   eyebrow: document.getElementById('eyebrow'),
   headline: document.getElementById('headline'),
-  body: document.getElementById('body')
+  body: document.getElementById('body'),
+  quoteText: document.getElementById('quoteText')
 };
 
 const previews = {
@@ -839,7 +864,8 @@ const previews = {
 const counts = {
   eyebrow: document.getElementById('eyebrowCount'),
   headline: document.getElementById('headlineCount'),
-  body: document.getElementById('bodyCount')
+  body: document.getElementById('bodyCount'),
+  quoteText: document.getElementById('quoteCount')
 };
 
 // Update character counts
@@ -1039,9 +1065,10 @@ function fallbackAnimation() {
 document.getElementById('contentType').addEventListener('change', (e) => {
   const type = e.target.value;
 
-  // Show/hide speaker section for events
-  const speakerSection = document.getElementById('speakerSection');
-  speakerSection.style.display = (type === 'event') ? 'block' : 'none';
+  // Show/hide conditional sections
+  document.getElementById('speakerSection').style.display = (type === 'event') ? 'block' : 'none';
+  document.getElementById('productOptions').style.display = (type === 'product') ? 'block' : 'none';
+  document.getElementById('quoteOptions').style.display = (type === 'quote') ? 'block' : 'none';
 
   const presets = {
     product: {
@@ -1063,6 +1090,16 @@ document.getElementById('contentType').addEventListener('change', (e) => {
       headline: 'DigitalOcean × [Partner]',
       body: 'Bringing powerful tools to developers everywhere.',
       cta: 'Learn more'
+    },
+    quote: {
+      eyebrow: '',
+      headline: 'DigitalOcean × [Customer]',
+      body: '',
+      cta: '',
+      customerName: 'Customer Name',
+      quoteText: '"Your testimonial quote goes here. What problem did DigitalOcean solve for you?"',
+      attributionName: 'Person Name',
+      attributionTitle: 'Title, Company'
     },
     hiring: {
       eyebrow: 'WE\'RE HIRING',
@@ -1086,15 +1123,27 @@ document.getElementById('contentType').addEventListener('change', (e) => {
 
   const preset = presets[type];
   if (preset) {
-    inputs.eyebrow.value = preset.eyebrow;
+    inputs.eyebrow.value = preset.eyebrow || '';
     inputs.headline.value = preset.headline;
-    inputs.body.value = preset.body;
-    document.getElementById('cta').value = preset.cta;
+    inputs.body.value = preset.body || '';
+    document.getElementById('cta').value = preset.cta || '';
 
     // Set speaker if event
-    if (type === 'event') {
-      document.getElementById('speakerName').value = preset.speaker || '';
-      document.getElementById('speakerTitle').value = preset.speakerTitle || '';
+    if (type === 'event' && preset.speaker) {
+      document.getElementById('speakerName').value = preset.speaker;
+      document.getElementById('speakerTitle').value = preset.speakerTitle;
+    }
+
+    // Set quote fields if customer quote
+    if (type === 'quote') {
+      document.getElementById('customerName').value = preset.customerName || '';
+      document.getElementById('quoteText').value = preset.quoteText || '';
+      document.getElementById('attributionName').value = preset.attributionName || '';
+      document.getElementById('attributionTitle').value = preset.attributionTitle || '';
+
+      // Update quote counter
+      const quoteCount = document.getElementById('quoteCount');
+      if (quoteCount) quoteCount.textContent = preset.quoteText.length;
     }
 
     // Trigger updates

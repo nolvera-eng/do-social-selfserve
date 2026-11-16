@@ -466,10 +466,25 @@ textarea {
       <div class="char-count"><span id="bodyCount">0</span>/120</div>
     </div>
 
+    <!-- Event Speaker Card Fields -->
     <div class="form-group" id="speakerSection" style="display: none;">
-      <label>Speaker <span style="color: var(--text-dim);">(For events)</span></label>
-      <input type="text" id="speakerName" placeholder="Speaker name" maxlength="40">
-      <input type="text" id="speakerTitle" placeholder="Title/Company" maxlength="50" style="margin-top: 8px;">
+      <label>Event Date</label>
+      <input type="text" id="eventDate" placeholder="FRIDAY, NOVEMBER 13" maxlength="40">
+
+      <label style="margin-top: 12px;">Event Time</label>
+      <input type="text" id="eventTime" placeholder="11:40 A.M. TO 12:00 P.M." maxlength="40">
+
+      <label style="margin-top: 12px;">Session Type <span style="color: var(--text-dim);">(Optional)</span></label>
+      <input type="text" id="sessionType" placeholder="OPEN STAGE SESSION" maxlength="40">
+
+      <label style="margin-top: 12px;">Location</label>
+      <input type="text" id="eventLocation" placeholder="FORT MASON, SAN FRANCISCO" maxlength="50">
+
+      <label style="margin-top: 12px;">Speaker Name</label>
+      <input type="text" id="speakerName" placeholder="Balaji Varadarajan" maxlength="40">
+
+      <label style="margin-top: 12px;">Speaker Title</label>
+      <input type="text" id="speakerTitle" placeholder="Inference Engineer, DigitalOcean" maxlength="60">
     </div>
 
     <div class="form-group">
@@ -1078,12 +1093,16 @@ document.getElementById('contentType').addEventListener('change', (e) => {
       cta: 'Learn more'
     },
     event: {
-      eyebrow: 'JOIN US',
-      headline: '[Event Name] 2026',
-      body: 'Connect with developers and industry leaders.',
-      cta: 'Register now',
-      speaker: 'Speaker Name',
-      speakerTitle: 'CTO, Company'
+      eyebrow: 'SGLANG SUMMIT',
+      headline: 'MOP: A Self-Learning Agent for SGLang Recipe Optimization',
+      body: '',
+      cta: '',
+      eventDate: 'FRIDAY, NOVEMBER 13',
+      eventTime: '11:40 A.M. TO 12:00 P.M.',
+      sessionType: 'OPEN STAGE SESSION',
+      eventLocation: 'FORT MASON, SAN FRANCISCO',
+      speaker: 'Balaji Varadarajan',
+      speakerTitle: 'Inference Engineer, DigitalOcean'
     },
     partnership: {
       eyebrow: 'PARTNERSHIP',
@@ -1128,10 +1147,14 @@ document.getElementById('contentType').addEventListener('change', (e) => {
     inputs.body.value = preset.body || '';
     document.getElementById('cta').value = preset.cta || '';
 
-    // Set speaker if event
-    if (type === 'event' && preset.speaker) {
-      document.getElementById('speakerName').value = preset.speaker;
-      document.getElementById('speakerTitle').value = preset.speakerTitle;
+    // Set event fields
+    if (type === 'event') {
+      document.getElementById('eventDate').value = preset.eventDate || '';
+      document.getElementById('eventTime').value = preset.eventTime || '';
+      document.getElementById('sessionType').value = preset.sessionType || '';
+      document.getElementById('eventLocation').value = preset.eventLocation || '';
+      document.getElementById('speakerName').value = preset.speaker || '';
+      document.getElementById('speakerTitle').value = preset.speakerTitle || '';
     }
 
     // Set quote fields if customer quote

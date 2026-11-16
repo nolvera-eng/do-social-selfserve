@@ -524,7 +524,8 @@ textarea {
       </select>
     </div>
 
-    <button class="btn-primary" onclick="generateAsset()">Generate Asset</button>
+    <button class="btn-primary" onclick="downloadPNG()">Download PNG (2x)</button>
+    <button class="btn-primary" id="downloadMP4Btn" onclick="downloadMP4()" style="margin-top: 12px; display: none;">Download MP4</button>
 
     <div class="info-box">
       <strong style="color: var(--accent);">Brand Guidelines Applied:</strong><br>
@@ -1015,12 +1016,15 @@ document.querySelectorAll('.radio-btn[data-type]').forEach(btn => {
     const type = btn.dataset.type;
     isAnimated = (type === 'animated');
     const preview = document.getElementById('preview');
+    const mp4Btn = document.getElementById('downloadMP4Btn');
 
     if (isAnimated) {
       preview.classList.add('animated');
+      mp4Btn.style.display = 'block';
       startAnimation();
     } else {
       preview.classList.remove('animated');
+      mp4Btn.style.display = 'none';
       stopAnimation();
     }
   });
@@ -1243,8 +1247,108 @@ document.getElementById('contentType').addEventListener('change', (e) => {
   }
 });
 
-function generateAsset() {
-  alert('In production, this would:\n\n1. Generate high-res PNGs (2x)\n2. Export to Figma\n3. Save to asset library\n4. Create download link\n\nFor now, take a screenshot of the preview!');
+// Download PNG function
+async function downloadPNG() {
+  const preview = document.getElementById('preview');
+  const originalWidth = preview.offsetWidth;
+  const originalHeight = preview.offsetHeight;
+
+  // Create a temporary canvas at 2x resolution
+  const canvas = document.createElement('canvas');
+  canvas.width = originalWidth * 2;
+  canvas.height = originalHeight * 2;
+  const ctx = canvas.getContext('2d');
+
+  // Scale for 2x resolution
+  ctx.scale(2, 2);
+
+  // If animated, capture the current animation frame
+  if (isAnimated) {
+    const animCanvas = document.getElementById('animCanvas');
+    ctx.drawImage(animCanvas, 0, 0, originalWidth, originalHeight);
+  }
+
+  // Use html2canvas to capture the preview
+  const html2canvas = window.html2canvas;
+  if (!html2canvas) {
+    alert('Loading export library...');
+    // Load html2canvas dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => downloadPNG();
+    document.head.appendChild(script);
+    return;
+  }
+
+  try {
+    const capturedCanvas = await html2canvas(preview, {
+      scale: 2,
+      backgroundColor: '#000F0F',
+      logging: false
+    });
+
+    // Download the canvas as PNG
+    const link = document.createElement('a');
+    const filename = `do-social-${Date.now()}.png`;
+    link.download = filename;
+    link.href = capturedCanvas.toDataURL('image/png');
+    link.click();
+  } catch (error) {
+    console.error('Export failed:', error);
+    alert('Export failed. Please try again.');
+  }
+}
+
+// Download MP4 function
+let mediaRecorder;
+let recordedChunks = [];
+
+async function downloadMP4() {
+  const animCanvas = document.getElementById('animCanvas');
+
+  if (!animCanvas || !isAnimated) {
+    alert('MP4 export is only available for animated mode');
+    return;
+  }
+
+  try {
+    const stream = animCanvas.captureStream(30); // 30 FPS
+    recordedChunks = [];
+
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm;codecs=vp9',
+      videoBitsPerSecond: 5000000
+    });
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        recordedChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `do-social-${Date.now()}.webm`;
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // Record for 10 seconds (one full loop at 90s would be too long, so capture 10s)
+    mediaRecorder.start();
+    document.getElementById('downloadMP4Btn').textContent = 'Recording... (10s)';
+
+    setTimeout(() => {
+      mediaRecorder.stop();
+      document.getElementById('downloadMP4Btn').textContent = 'Download MP4';
+    }, 10000);
+
+  } catch (error) {
+    console.error('Video recording failed:', error);
+    alert('MP4 export failed. Your browser may not support video recording.');
+  }
 }
 
 // Initialize with default preset

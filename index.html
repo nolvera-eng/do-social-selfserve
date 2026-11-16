@@ -1367,8 +1367,14 @@ document.getElementById('contentType').addEventListener('change', (e) => {
 // Download PNG function
 async function downloadPNG() {
   const preview = document.getElementById('preview');
+  const dimensionLabel = document.querySelector('.dimension-label');
   const originalWidth = preview.offsetWidth;
   const originalHeight = preview.offsetHeight;
+
+  // Hide dimension label before capturing
+  if (dimensionLabel) {
+    dimensionLabel.style.display = 'none';
+  }
 
   // Create a temporary canvas at 2x resolution
   const canvas = document.createElement('canvas');
@@ -1388,6 +1394,11 @@ async function downloadPNG() {
   // Use html2canvas to capture the preview
   const html2canvas = window.html2canvas;
   if (!html2canvas) {
+    // Show dimension label again
+    if (dimensionLabel) {
+      dimensionLabel.style.display = 'block';
+    }
+
     alert('Loading export library...');
     // Load html2canvas dynamically
     const script = document.createElement('script');
@@ -1410,9 +1421,19 @@ async function downloadPNG() {
     link.download = filename;
     link.href = capturedCanvas.toDataURL('image/png');
     link.click();
+
+    // Show dimension label again
+    if (dimensionLabel) {
+      dimensionLabel.style.display = 'block';
+    }
   } catch (error) {
     console.error('Export failed:', error);
     alert('Export failed. Please try again.');
+
+    // Show dimension label again
+    if (dimensionLabel) {
+      dimensionLabel.style.display = 'block';
+    }
   }
 }
 

@@ -537,10 +537,7 @@ textarea {
 
       <label style="margin-top: 12px;">Speaker Photo <span style="color: var(--text-dim);">(Optional)</span></label>
       <input type="file" id="speakerPhoto" accept="image/*" style="padding: 8px;">
-      <label style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-        <input type="checkbox" id="removeBg" style="width: auto; margin: 0;">
-        <span style="font-size: 11px; text-transform: none; letter-spacing: 0;">Remove background automatically</span>
-      </label>
+      <button type="button" id="removeBgBtn" style="margin-top: 8px; padding: 8px 12px; background: var(--accent-deep); border: 1px solid var(--accent); color: var(--text-bright); border-radius: 4px; font-family: var(--mono); font-size: 11px; cursor: pointer; display: none;">Remove Background</button>
       <div id="bgRemovalStatus" style="font-size: 10px; color: var(--accent); margin-top: 4px; display: none;">Processing...</div>
       <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Square photos work best (1:1 ratio)</div>
     </div>
@@ -1036,89 +1033,90 @@ if (eventLocationInput) eventLocationInput.addEventListener('input', updateEvent
 if (speakerNameInput) speakerNameInput.addEventListener('input', updateEventFields);
 if (speakerTitleInput) speakerTitleInput.addEventListener('input', updateEventFields);
 
-// Speaker photo upload with optional background removal
+// Speaker photo upload with background removal
 const speakerPhotoInput = document.getElementById('speakerPhoto');
 const previewSpeakerPhoto = document.getElementById('previewSpeakerPhoto');
-const removeBgCheckbox = document.getElementById('removeBg');
+const removeBgBtn = document.getElementById('removeBgBtn');
 const bgRemovalStatus = document.getElementById('bgRemovalStatus');
+let currentPhotoFile = null;
 
-async function processPhoto(file) {
-  const shouldRemoveBg = removeBgCheckbox && removeBgCheckbox.checked;
-
-  if (!shouldRemoveBg) {
-    // Just load the image normally
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      previewSpeakerPhoto.src = event.target.result;
-      updateEventFields();
-    };
-    reader.readAsDataURL(file);
-    return;
-  }
-
-  // Remove background using imgly library
-  try {
-    bgRemovalStatus.style.display = 'block';
-    bgRemovalStatus.textContent = 'Removing background...';
-
-    // Load the library if not already loaded
-    if (!window.removeBackground) {
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.textContent = `
-        import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm';
-        window.removeBackground = removeBackground;
-      `;
-      document.head.appendChild(script);
-
-      // Wait for library to load
-      await new Promise(resolve => {
-        const checkLoaded = setInterval(() => {
-          if (window.removeBackground) {
-            clearInterval(checkLoaded);
-            resolve();
-          }
-        }, 100);
-      });
-    }
-
-    // Process the image
-    const imageUrl = URL.createObjectURL(file);
-    const blob = await window.removeBackground(imageUrl);
-    const url = URL.createObjectURL(blob);
-
-    previewSpeakerPhoto.src = url;
-    bgRemovalStatus.textContent = 'Background removed!';
-    setTimeout(() => {
-      bgRemovalStatus.style.display = 'none';
-    }, 2000);
-
-    updateEventFields();
-  } catch (error) {
-    console.error('Background removal failed:', error);
-    bgRemovalStatus.textContent = 'Failed to remove background. Using original image.';
-    bgRemovalStatus.style.color = '#DC2626';
-
-    // Fallback to original image
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      previewSpeakerPhoto.src = event.target.result;
-      updateEventFields();
-    };
-    reader.readAsDataURL(file);
-
-    setTimeout(() => {
-      bgRemovalStatus.style.display = 'none';
-      bgRemovalStatus.style.color = 'var(--accent)';
-    }, 3000);
-  }
-}
-
+// Load photo normally
 if (speakerPhotoInput) {
   speakerPhotoInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file && file.type.startsWith('image/')) {
-      processPhoto(file);
+      currentPhotoFile = file;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        previewSpeakerPhoto.src = event.target.result;
+        removeBgBtn.style.display = 'block';
+        updateEventFields();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+// Remove background when button is clicked
+if (removeBgBtn) {
+  removeBgBtn.addEventListener('click', async () => {
+    if (!currentPhotoFile) return;
+
+    try {
+      bgRemovalStatus.style.display = 'block';
+      bgRemovalStatus.textContent = 'Removing background...';
+      removeBgBtn.disabled = true;
+      removeBgBtn.textContent = 'Processing...';
+
+      // Load the library if not already loaded
+      if (!window.removeBackground) {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = `
+          import { removeBackground } from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm';
+          window.removeBackground = removeBackground;
+        `;
+        document.head.appendChild(script);
+
+        // Wait for library to load
+        await new Promise(resolve => {
+          const checkLoaded = setInterval(() => {
+            if (window.removeBackground) {
+              clearInterval(checkLoaded);
+              resolve();
+            }
+          }, 100);
+        });
+      }
+
+      // Process the image
+      const imageUrl = URL.createObjectURL(currentPhotoFile);
+      const blob = await window.removeBackground(imageUrl);
+      const url = URL.createObjectURL(blob);
+
+      previewSpeakerPhoto.src = url;
+      bgRemovalStatus.textContent = 'Background removed!';
+      removeBgBtn.textContent = 'Background Removed ✓';
+      removeBgBtn.style.background = 'var(--accent)';
+      removeBgBtn.style.color = 'var(--ground)';
+
+      setTimeout(() => {
+        bgRemovalStatus.style.display = 'none';
+      }, 2000);
+
+      updateEventFields();
+    } catch (error) {
+      console.error('Background removal failed:', error);
+      bgRemovalStatus.textContent = 'Failed to remove background';
+      bgRemovalStatus.style.color = '#DC2626';
+      removeBgBtn.disabled = false;
+      removeBgBtn.textContent = 'Remove Background';
+
+      setTimeout(() => {
+        bgRemovalStatus.style.display = 'none';
+        bgRemovalStatus.style.color = 'var(--accent)';
+      }, 3000);
     }
   });
 }

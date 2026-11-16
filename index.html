@@ -274,22 +274,45 @@ textarea {
   margin-top: 20px;
 }
 
-.canvas-speaker {
-  margin-top: 20px;
-  padding: 16px;
-  background: rgba(16, 75, 85, 0.3);
+/* Event Metadata Pills */
+.canvas-event-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.canvas-pill {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: rgba(16, 75, 85, 0.2);
   border: 1px solid var(--accent-deep);
   border-radius: 4px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+/* Speaker Section */
+.canvas-speaker {
+  margin-top: 32px;
   display: none;
 }
 
-.canvas-speaker.visible {
-  display: block;
+.canvas-speaker-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
 }
 
 .canvas-speaker-name {
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 24px;
   font-weight: 400;
   color: var(--text-bright);
   margin-bottom: 4px;
@@ -297,9 +320,9 @@ textarea {
 
 .canvas-speaker-title {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-mid);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .info-box {
@@ -544,10 +567,22 @@ textarea {
           <div class="canvas-eyebrow" id="previewEyebrow">NEW FEATURE</div>
           <div class="canvas-headline" id="previewHeadline">Your headline appears here</div>
           <div class="canvas-body" id="previewBody">Supporting details and context for your announcement.</div>
-          <div class="canvas-speaker" id="previewSpeaker">
+
+          <!-- Event Metadata Pills -->
+          <div class="canvas-event-meta" id="previewEventMeta" style="display: none;">
+            <div class="canvas-pill" id="previewEventDate">FRIDAY, NOVEMBER 13</div>
+            <div class="canvas-pill" id="previewEventTime">11:40 A.M. TO 12:00 P.M.</div>
+            <div class="canvas-pill" id="previewSessionType">OPEN STAGE SESSION</div>
+            <div class="canvas-pill" id="previewEventLocation">FORT MASON, SAN FRANCISCO</div>
+          </div>
+
+          <!-- Speaker Section -->
+          <div class="canvas-speaker" id="previewSpeaker" style="display: none;">
+            <div class="canvas-speaker-label">SPEAKER</div>
             <div class="canvas-speaker-name" id="previewSpeakerName">Speaker Name</div>
             <div class="canvas-speaker-title" id="previewSpeakerTitle">Title, Company</div>
           </div>
+
           <div class="canvas-cta" id="previewCta">Learn more</div>
         </div>
       </div>
@@ -917,28 +952,56 @@ document.getElementById('cta').addEventListener('change', (e) => {
   }
 });
 
-// Speaker updates
+// Event metadata and speaker updates
+const eventDateInput = document.getElementById('eventDate');
+const eventTimeInput = document.getElementById('eventTime');
+const sessionTypeInput = document.getElementById('sessionType');
+const eventLocationInput = document.getElementById('eventLocation');
 const speakerNameInput = document.getElementById('speakerName');
 const speakerTitleInput = document.getElementById('speakerTitle');
+
+const previewEventMeta = document.getElementById('previewEventMeta');
+const previewEventDate = document.getElementById('previewEventDate');
+const previewEventTime = document.getElementById('previewEventTime');
+const previewSessionType = document.getElementById('previewSessionType');
+const previewEventLocation = document.getElementById('previewEventLocation');
 const previewSpeaker = document.getElementById('previewSpeaker');
 const previewSpeakerName = document.getElementById('previewSpeakerName');
 const previewSpeakerTitle = document.getElementById('previewSpeakerTitle');
 
-function updateSpeaker() {
-  const name = speakerNameInput.value.trim();
-  const title = speakerTitleInput.value.trim();
+function updateEventFields() {
+  const currentType = document.getElementById('contentType').value;
 
-  if (name || title) {
-    previewSpeakerName.textContent = name || 'Speaker Name';
-    previewSpeakerTitle.textContent = title || 'Title';
-    previewSpeaker.classList.add('visible');
+  if (currentType === 'event') {
+    // Update metadata pills
+    previewEventDate.textContent = eventDateInput.value.trim() || 'EVENT DATE';
+    previewEventTime.textContent = eventTimeInput.value.trim() || 'EVENT TIME';
+    previewSessionType.textContent = sessionTypeInput.value.trim() || 'SESSION TYPE';
+    previewEventLocation.textContent = eventLocationInput.value.trim() || 'LOCATION';
+
+    // Show metadata pills
+    previewEventMeta.style.display = 'grid';
+
+    // Update speaker
+    previewSpeakerName.textContent = speakerNameInput.value.trim() || 'Speaker Name';
+    previewSpeakerTitle.textContent = speakerTitleInput.value.trim() || 'Title, Company';
+
+    // Show speaker section
+    previewSpeaker.style.display = 'block';
   } else {
-    previewSpeaker.classList.remove('visible');
+    // Hide event-specific sections for non-event content
+    previewEventMeta.style.display = 'none';
+    previewSpeaker.style.display = 'none';
   }
 }
 
-speakerNameInput.addEventListener('input', updateSpeaker);
-speakerTitleInput.addEventListener('input', updateSpeaker);
+// Add listeners to all event fields
+if (eventDateInput) eventDateInput.addEventListener('input', updateEventFields);
+if (eventTimeInput) eventTimeInput.addEventListener('input', updateEventFields);
+if (sessionTypeInput) sessionTypeInput.addEventListener('input', updateEventFields);
+if (eventLocationInput) eventLocationInput.addEventListener('input', updateEventFields);
+if (speakerNameInput) speakerNameInput.addEventListener('input', updateEventFields);
+if (speakerTitleInput) speakerTitleInput.addEventListener('input', updateEventFields);
 
 // Type switcher (Static vs Animated)
 let isAnimated = false;
@@ -1174,6 +1237,9 @@ document.getElementById('contentType').addEventListener('change', (e) => {
     inputs.headline.dispatchEvent(new Event('input'));
     inputs.body.dispatchEvent(new Event('input'));
     document.getElementById('cta').dispatchEvent(new Event('change'));
+
+    // Update event fields display
+    updateEventFields();
   }
 });
 

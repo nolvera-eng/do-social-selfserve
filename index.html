@@ -305,16 +305,22 @@ textarea {
 
 .canvas-speaker-photo-container {
   flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(111, 224, 237, 0.3) 0%, rgba(219, 112, 147, 0.3) 100%);
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .canvas-speaker-photo {
-  width: 120px;
-  height: 120px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  background: linear-gradient(135deg, #6FE0ED 0%, #DB7093 100%);
-  padding: 2px;
+  border-radius: 6px;
+  background: var(--ground);
 }
 
 .canvas-speaker-info {
@@ -596,7 +602,7 @@ textarea {
           <!-- Speaker Section -->
           <div class="canvas-speaker" id="previewSpeaker" style="display: none;">
             <div class="canvas-speaker-photo-container">
-              <img id="previewSpeakerPhoto" class="canvas-speaker-photo" src="" alt="" style="display: none;">
+              <img id="previewSpeakerPhoto" class="canvas-speaker-photo" src="" alt="">
             </div>
             <div class="canvas-speaker-info">
               <div class="canvas-speaker-label">SPEAKER</div>
@@ -1036,8 +1042,6 @@ if (speakerPhotoInput) {
       const reader = new FileReader();
       reader.onload = (event) => {
         previewSpeakerPhoto.src = event.target.result;
-        previewSpeakerPhoto.style.display = 'block';
-        // Also show the speaker section when photo is added
         updateEventFields();
       };
       reader.readAsDataURL(file);

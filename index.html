@@ -457,7 +457,7 @@ textarea {
       </select>
     </div>
 
-    <!-- Product Launch Options -->
+    
     <div class="form-group" id="productOptions" style="display: none;">
       <label>
         <input type="checkbox" id="dayZeroBadge" style="width: auto; margin-right: 8px;">
@@ -467,7 +467,7 @@ textarea {
       <input type="text" id="partnerLogo" placeholder="https://partner.com/logo.svg">
     </div>
 
-    <!-- Customer Quote Options -->
+    
     <div class="form-group" id="quoteOptions" style="display: none;">
       <label>Customer/Partner Name</label>
       <input type="text" id="customerName" placeholder="Company name" maxlength="40">
@@ -515,7 +515,7 @@ textarea {
       <div class="char-count"><span id="bodyCount">0</span>/120</div>
     </div>
 
-    <!-- Event Speaker Card Fields -->
+    
     <div class="form-group" id="speakerSection" style="display: none;">
       <label>Event Date</label>
       <input type="text" id="eventDate" placeholder="FRIDAY, NOVEMBER 13" maxlength="40">
@@ -593,7 +593,7 @@ textarea {
           <div class="canvas-headline" id="previewHeadline">Your headline appears here</div>
           <div class="canvas-body" id="previewBody">Supporting details and context for your announcement.</div>
 
-          <!-- Event Metadata Pills -->
+          
           <div class="canvas-event-meta" id="previewEventMeta" style="display: none;">
             <div class="canvas-pill" id="previewEventDate">FRIDAY, NOVEMBER 13</div>
             <div class="canvas-pill" id="previewEventTime">11:40 A.M. TO 12:00 P.M.</div>
@@ -601,7 +601,7 @@ textarea {
             <div class="canvas-pill" id="previewEventLocation">FORT MASON, SAN FRANCISCO</div>
           </div>
 
-          <!-- Speaker Section -->
+          
           <div class="canvas-speaker" id="previewSpeaker" style="display: none;">
             <div class="canvas-speaker-photo-container">
               <img id="previewSpeakerPhoto" class="canvas-speaker-photo" src="" alt="">
@@ -624,7 +624,7 @@ textarea {
 <script>
 let terrainRenderer = null;
 
-// WebGL Terrain Animation - inlined for compatibility
+
 function initTerrainAnimation(canvas) {
   const gl = canvas.getContext('webgl2', { antialias: true, alpha: true, premultipliedAlpha: false });
 
@@ -888,7 +888,7 @@ function initTerrainAnimation(canvas) {
       gl.uniform2f(gl.getUniformLocation(p, 'uRes'), W, H);
     }
     gl.useProgram(prog);
-    gl.uniform1f(U('uLW'), 1.0); // 1px thin wireframe
+    gl.uniform1f(U('uLW'), 1.0);
   }
 
   resize();
@@ -923,10 +923,10 @@ function initTerrainAnimation(canvas) {
   return { render, resize };
 }
 
-// Main code
 
 
-// Character counters
+
+
 const inputs = {
   eyebrow: document.getElementById('eyebrow'),
   headline: document.getElementById('headline'),
@@ -948,7 +948,7 @@ const counts = {
   quoteText: document.getElementById('quoteCount')
 };
 
-// Update character counts
+
 Object.keys(inputs).forEach(key => {
   inputs[key].addEventListener('input', (e) => {
     const count = e.target.value.length;
@@ -960,7 +960,7 @@ Object.keys(inputs).forEach(key => {
     if (count > max * 0.9) countEl.classList.add('warning');
     if (count >= max) countEl.classList.add('error');
 
-    // Update preview
+
     if (previews[key]) {
       if (e.target.value.trim()) {
         previews[key].textContent = e.target.value;
@@ -972,7 +972,7 @@ Object.keys(inputs).forEach(key => {
   });
 });
 
-// CTA update
+
 document.getElementById('cta').addEventListener('change', (e) => {
   if (e.target.value) {
     previews.cta.textContent = e.target.value;
@@ -982,7 +982,7 @@ document.getElementById('cta').addEventListener('change', (e) => {
   }
 });
 
-// Event metadata and speaker updates
+
 const eventDateInput = document.getElementById('eventDate');
 const eventTimeInput = document.getElementById('eventTime');
 const sessionTypeInput = document.getElementById('sessionType');
@@ -1003,29 +1003,29 @@ function updateEventFields() {
   const currentType = document.getElementById('contentType').value;
 
   if (currentType === 'event') {
-    // Update metadata pills
+
     previewEventDate.textContent = eventDateInput.value.trim() || 'EVENT DATE';
     previewEventTime.textContent = eventTimeInput.value.trim() || 'EVENT TIME';
     previewSessionType.textContent = sessionTypeInput.value.trim() || 'SESSION TYPE';
     previewEventLocation.textContent = eventLocationInput.value.trim() || 'LOCATION';
 
-    // Show metadata pills
+
     previewEventMeta.style.display = 'grid';
 
-    // Update speaker
+
     previewSpeakerName.textContent = speakerNameInput.value.trim() || 'Speaker Name';
     previewSpeakerTitle.textContent = speakerTitleInput.value.trim() || 'Title, Company';
 
-    // Show speaker section
+
     previewSpeaker.style.display = 'block';
   } else {
-    // Hide event-specific sections for non-event content
+
     previewEventMeta.style.display = 'none';
     previewSpeaker.style.display = 'none';
   }
 }
 
-// Add listeners to all event fields
+
 if (eventDateInput) eventDateInput.addEventListener('input', updateEventFields);
 if (eventTimeInput) eventTimeInput.addEventListener('input', updateEventFields);
 if (sessionTypeInput) sessionTypeInput.addEventListener('input', updateEventFields);
@@ -1033,14 +1033,14 @@ if (eventLocationInput) eventLocationInput.addEventListener('input', updateEvent
 if (speakerNameInput) speakerNameInput.addEventListener('input', updateEventFields);
 if (speakerTitleInput) speakerTitleInput.addEventListener('input', updateEventFields);
 
-// Speaker photo upload with background removal
+
 const speakerPhotoInput = document.getElementById('speakerPhoto');
 const previewSpeakerPhoto = document.getElementById('previewSpeakerPhoto');
 const removeBgBtn = document.getElementById('removeBgBtn');
 const bgRemovalStatus = document.getElementById('bgRemovalStatus');
 let currentPhotoFile = null;
 
-// Load photo normally
+
 if (speakerPhotoInput) {
   speakerPhotoInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -1058,7 +1058,7 @@ if (speakerPhotoInput) {
   });
 }
 
-// Remove background when button is clicked
+
 if (removeBgBtn) {
   removeBgBtn.addEventListener('click', async () => {
     if (!currentPhotoFile) return;
@@ -1069,7 +1069,7 @@ if (removeBgBtn) {
       removeBgBtn.disabled = true;
       removeBgBtn.textContent = 'Processing...';
 
-      // Load the library if not already loaded
+
       if (!window.removeBackground) {
         const script = document.createElement('script');
         script.type = 'module';
@@ -1079,7 +1079,7 @@ if (removeBgBtn) {
         `;
         document.head.appendChild(script);
 
-        // Wait for library to load
+
         await new Promise(resolve => {
           const checkLoaded = setInterval(() => {
             if (window.removeBackground) {
@@ -1090,7 +1090,7 @@ if (removeBgBtn) {
         });
       }
 
-      // Process the image
+
       const imageUrl = URL.createObjectURL(currentPhotoFile);
       const blob = await window.removeBackground(imageUrl);
       const url = URL.createObjectURL(blob);
@@ -1121,7 +1121,7 @@ if (removeBgBtn) {
   });
 }
 
-// Type switcher (Static vs Animated)
+
 let isAnimated = false;
 let animationFrame = null;
 
@@ -1147,7 +1147,7 @@ document.querySelectorAll('.radio-btn[data-type]').forEach(btn => {
   });
 });
 
-// Format switcher
+
 document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
   btn.addEventListener('click', (e) => {
     document.querySelectorAll('.radio-btn[data-format]').forEach(b => b.classList.remove('active'));
@@ -1166,7 +1166,7 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
     };
     label.textContent = dimensions[format];
 
-    // Adjust layout for story format
+
     const content = preview.querySelector('.canvas-content');
     if (format === 'story') {
       content.style.padding = '32px';
@@ -1176,7 +1176,7 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
       previews.headline.style.fontSize = '32px';
     }
 
-    // Restart animation if active
+
     if (isAnimated) {
       stopAnimation();
       startAnimation();
@@ -1184,7 +1184,7 @@ document.querySelectorAll('.radio-btn[data-format]').forEach(btn => {
   });
 });
 
-// WebGL Terrain Animation
+
 function startAnimation() {
   const canvas = document.getElementById('animCanvas');
   console.log('Starting animation...', canvas);
@@ -1199,7 +1199,7 @@ function startAnimation() {
       return;
     }
 
-    // Ensure canvas is sized
+
     const preview = document.getElementById('preview');
     canvas.width = preview.offsetWidth;
     canvas.height = preview.offsetHeight;
@@ -1235,7 +1235,7 @@ function stopAnimation() {
   }
 }
 
-// Fallback for browsers without WebGL2
+
 function fallbackAnimation() {
   const canvas = document.getElementById('animCanvas');
   const ctx = canvas.getContext('2d');
@@ -1246,7 +1246,7 @@ function fallbackAnimation() {
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Simple glow
+
     const grad = ctx.createRadialGradient(w/2, h*0.6, 0, w/2, h*0.6, h*0.5);
     grad.addColorStop(0, 'rgba(48, 203, 217, 0.15)');
     grad.addColorStop(1, 'rgba(48, 203, 217, 0)');
@@ -1260,11 +1260,11 @@ function fallbackAnimation() {
   draw();
 }
 
-// Content type presets
+
 document.getElementById('contentType').addEventListener('change', (e) => {
   const type = e.target.value;
 
-  // Show/hide conditional sections
+
   document.getElementById('speakerSection').style.display = (type === 'event') ? 'block' : 'none';
   document.getElementById('productOptions').style.display = (type === 'product') ? 'block' : 'none';
   document.getElementById('quoteOptions').style.display = (type === 'quote') ? 'block' : 'none';
@@ -1331,7 +1331,7 @@ document.getElementById('contentType').addEventListener('change', (e) => {
     inputs.body.value = preset.body || '';
     document.getElementById('cta').value = preset.cta || '';
 
-    // Set event fields
+
     if (type === 'event') {
       document.getElementById('eventDate').value = preset.eventDate || '';
       document.getElementById('eventTime').value = preset.eventTime || '';
@@ -1341,66 +1341,66 @@ document.getElementById('contentType').addEventListener('change', (e) => {
       document.getElementById('speakerTitle').value = preset.speakerTitle || '';
     }
 
-    // Set quote fields if customer quote
+
     if (type === 'quote') {
       document.getElementById('customerName').value = preset.customerName || '';
       document.getElementById('quoteText').value = preset.quoteText || '';
       document.getElementById('attributionName').value = preset.attributionName || '';
       document.getElementById('attributionTitle').value = preset.attributionTitle || '';
 
-      // Update quote counter
+
       const quoteCount = document.getElementById('quoteCount');
       if (quoteCount) quoteCount.textContent = preset.quoteText.length;
     }
 
-    // Trigger updates
+
     inputs.eyebrow.dispatchEvent(new Event('input'));
     inputs.headline.dispatchEvent(new Event('input'));
     inputs.body.dispatchEvent(new Event('input'));
     document.getElementById('cta').dispatchEvent(new Event('change'));
 
-    // Update event fields display
+
     updateEventFields();
   }
 });
 
-// Download PNG function
+
 async function downloadPNG() {
   const preview = document.getElementById('preview');
   const dimensionLabel = document.querySelector('.dimension-label');
   const originalWidth = preview.offsetWidth;
   const originalHeight = preview.offsetHeight;
 
-  // Hide dimension label before capturing
+
   if (dimensionLabel) {
     dimensionLabel.style.display = 'none';
   }
 
-  // Create a temporary canvas at 2x resolution
+
   const canvas = document.createElement('canvas');
   canvas.width = originalWidth * 2;
   canvas.height = originalHeight * 2;
   const ctx = canvas.getContext('2d');
 
-  // Scale for 2x resolution
+
   ctx.scale(2, 2);
 
-  // If animated, capture the current animation frame
+
   if (isAnimated) {
     const animCanvas = document.getElementById('animCanvas');
     ctx.drawImage(animCanvas, 0, 0, originalWidth, originalHeight);
   }
 
-  // Use html2canvas to capture the preview
+
   const html2canvas = window.html2canvas;
   if (!html2canvas) {
-    // Show dimension label again
+
     if (dimensionLabel) {
       dimensionLabel.style.display = 'block';
     }
 
     alert('Loading export library...');
-    // Load html2canvas dynamically
+
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
     script.onload = () => downloadPNG();
@@ -1415,14 +1415,14 @@ async function downloadPNG() {
       logging: false
     });
 
-    // Download the canvas as PNG
+
     const link = document.createElement('a');
     const filename = `do-social-${Date.now()}.png`;
     link.download = filename;
     link.href = capturedCanvas.toDataURL('image/png');
     link.click();
 
-    // Show dimension label again
+
     if (dimensionLabel) {
       dimensionLabel.style.display = 'block';
     }
@@ -1430,14 +1430,14 @@ async function downloadPNG() {
     console.error('Export failed:', error);
     alert('Export failed. Please try again.');
 
-    // Show dimension label again
+
     if (dimensionLabel) {
       dimensionLabel.style.display = 'block';
     }
   }
 }
 
-// Download MP4 function
+
 let mediaRecorder;
 let recordedChunks = [];
 
@@ -1450,7 +1450,7 @@ async function downloadMP4() {
   }
 
   try {
-    const stream = animCanvas.captureStream(30); // 30 FPS
+    const stream = animCanvas.captureStream(30);
     recordedChunks = [];
 
     mediaRecorder = new MediaRecorder(stream, {
@@ -1474,7 +1474,7 @@ async function downloadMP4() {
       URL.revokeObjectURL(url);
     };
 
-    // Record for 10 seconds (one full loop at 90s would be too long, so capture 10s)
+
     mediaRecorder.start();
     document.getElementById('downloadMP4Btn').textContent = 'Recording... (10s)';
 
@@ -1489,7 +1489,7 @@ async function downloadMP4() {
   }
 }
 
-// Initialize with default preset
+
 document.getElementById('contentType').dispatchEvent(new Event('change'));
 </script>
 

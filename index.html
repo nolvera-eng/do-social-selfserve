@@ -299,21 +299,20 @@ textarea {
 /* Speaker Section */
 .canvas-speaker {
   margin-top: 32px;
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  display: block;
 }
 
 .canvas-speaker-photo-container {
-  flex-shrink: 0;
   width: 60px;
   height: 60px;
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(111, 224, 237, 0.3) 0%, rgba(219, 112, 147, 0.3) 100%);
   padding: 3px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  vertical-align: middle;
+  margin-right: 12px;
 }
 
 .canvas-speaker-photo {
@@ -325,7 +324,7 @@ textarea {
 }
 
 .canvas-speaker-info {
-  flex: 1;
+  display: block;
 }
 
 .canvas-speaker-label {
@@ -334,7 +333,8 @@ textarea {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-bottom: 8px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .canvas-speaker-name {
@@ -342,6 +342,7 @@ textarea {
   font-size: 24px;
   font-weight: 400;
   color: var(--text-bright);
+  margin-top: 12px;
   margin-bottom: 4px;
 }
 

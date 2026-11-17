@@ -249,6 +249,7 @@ textarea {
   letter-spacing: -0.02em;
   color: var(--text-bright);
   line-height: 1.2;
+  margin-top: 32px;
   margin-bottom: 16px;
 }
 
@@ -305,8 +306,8 @@ textarea {
 
 .canvas-speaker-photo-container {
   flex-shrink: 0;
-  width: 120px;
-  height: 120px;
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(111, 224, 237, 0.3) 0%, rgba(219, 112, 147, 0.3) 100%);
   padding: 3px;
@@ -483,8 +484,8 @@ textarea {
     <div class="form-group">
       <label>Type</label>
       <div class="radio-group">
-        <div class="radio-btn active" data-type="static">Static</div>
-        <div class="radio-btn" data-type="animated">Animated</div>
+        <div class="radio-btn" data-type="static">Static</div>
+        <div class="radio-btn active" data-type="animated">Animated</div>
       </div>
     </div>
 
@@ -1122,7 +1123,7 @@ if (removeBgBtn) {
 }
 
 
-let isAnimated = false;
+let isAnimated = true;
 let animationFrame = null;
 
 document.querySelectorAll('.radio-btn[data-type]').forEach(btn => {
@@ -1491,6 +1492,11 @@ async function downloadMP4() {
 
 
 document.getElementById('contentType').dispatchEvent(new Event('change'));
+
+const preview = document.getElementById('preview');
+preview.classList.add('animated');
+startAnimation();
+document.getElementById('downloadMP4Btn').style.display = 'block';
 </script>
 
 </body>

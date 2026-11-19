@@ -1,0 +1,33 @@
+<!DOCTYPE html><body style="margin:0;background:#000"><canvas id="c" width="1080" height="1080"></canvas>
+<script>
+const load = (s) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = s; });
+const px = (img) => { const c = document.createElement('canvas'); c.width = c.height = 1080; const x = c.getContext('2d'); x.drawImage(img, 0, 0); return x.getImageData(0, 0, 1080, 1080); };
+(async () => {
+  const [H, V] = (await Promise.all(['h.png', 'v.png'].map(load))).map(px);
+  const isMark = (d, i) => d.data[i] > 105;
+  const mask = (d, x0, y0, x1, y1) => { const m = new Uint8Array(1080 * 1080); for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) if (isMark(d, (y * 1080 + x) * 4)) for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) m[(y + dy) * 1080 + x + dx] = 1; return m; };
+  const mH = mask(H, 60, 470, 1020, 610), mV = mask(V, 200, 300, 880, 760);
+  const out = new ImageData(new Uint8ClampedArray(H.data), 1080, 1080);
+  const hole = new Uint8Array(1080 * 1080);
+  for (let p = 0; p < 1080 * 1080; p++) {
+    if (!mH[p]) continue;
+    if (mV[p]) { hole[p] = 1; continue; }
+    for (let k = 0; k < 4; k++) out.data[p * 4 + k] = V.data[p * 4 + k];
+  }
+  const holeIdx = [];
+  for (let p = 0; p < 1080 * 1080; p++) if (hole[p]) holeIdx.push(p);
+  const ring = new Set();
+  for (const p of holeIdx) for (let dy = -5; dy <= 5; dy++) for (let dx = -5; dx <= 5; dx++) { const q = p + dy * 1080 + dx; if (!hole[q]) ring.add(q); }
+  const ringU = [...ring];
+  let best = null;
+  for (let oy = -140; oy <= 140; oy++) for (let ox = -140; ox <= 140; ox++) {
+    if (Math.abs(ox) < 50 && Math.abs(oy) < 40) continue;
+    let ssd = 0, ok = true;
+    for (const q of ringU) { const r = q + oy * 1080 + ox; if (mH[r]) { ok = false; break; } for (let k = 0; k < 3; k++) { const d = out.data[q * 4 + k] - out.data[r * 4 + k]; ssd += d * d; } if (best && ssd > best.ssd) break; }
+    if (ok && (!best || ssd < best.ssd)) best = { ssd, ox, oy };
+  }
+  for (const p of holeIdx) { const r = p + best.oy * 1080 + best.ox; for (let k = 0; k < 4; k++) out.data[p * 4 + k] = out.data[r * 4 + k]; }
+  console.log('DONE', best.ox, best.oy);
+  document.getElementById('c').getContext('2d').putImageData(out, 0, 0);
+})();
+</script></body>

@@ -683,7 +683,7 @@ function syncControls() {
 }
 
 // Cohost and speaker cards.
-function entry(title, inputs, onImage, onClear) {
+function entry(title, inputs, onImage) {
   const box = document.createElement("div");
   box.className = "entry";
   const top = document.createElement("div");
@@ -698,10 +698,7 @@ function entry(title, inputs, onImage, onClear) {
   file.type = "file"; file.accept = onImage.accept; file.hidden = true;
   file.onchange = async () => { if (file.files[0]) { await onImage.set(await imageFromFile(file.files[0])); render(); } file.value = ""; };
   up.append(file);
-  const clear = document.createElement("button");
-  clear.type = "button"; clear.className = "btn ghost small"; clear.textContent = onClear.label;
-  clear.onclick = () => { onClear.run(); render(); };
-  row.append(up, clear);
+  row.append(up);
   box.append(top, ...inputs, row);
   return box;
 }
@@ -713,14 +710,12 @@ function textInput(value, placeholder, set) {
 }
 document.getElementById("cohosts").append(...state.cohosts.map((m, i) => entry(`Cohost ${i + 1}`,
   [textInput(m.name, "Name, shown as text until you add a logo", (v) => { m.name = v; })],
-  { label: "Upload logo", accept: "image/svg+xml,image/png", set: (img) => { m.img = img; } },
-  { label: "Remove logo", run: () => { m.img = null; } })));
+  { label: "Upload logo", accept: "image/svg+xml,image/png", set: (img) => { m.img = img; } })));
 document.getElementById("speakers").append(...state.speakers.map((sp, i) => entry(`Speaker ${i + 1}`,
   [textInput(sp.label, "Role, like Instructor", (v) => { sp.label = v; }),
    textInput(sp.name, "Name", (v) => { sp.name = v; }),
    textInput(sp.title, "Title", (v) => { sp.title = v; })],
-  { label: "Upload photo", accept: "image/*", set: (img) => { sp.img = img; } },
-  { label: "Remove photo", run: () => { sp.img = null; } })));
+  { label: "Upload photo", accept: "image/*", set: (img) => { sp.img = img; } })));
 
 form.querySelectorAll("[data-group] button").forEach((b) => {
   b.addEventListener("click", () => {
@@ -751,7 +746,6 @@ form.querySelectorAll("[data-image]").forEach((input) => {
     render();
   });
 });
-form.querySelector('[data-clear="partner"]').onclick = () => { state.partner.img = null; render(); };
 document.getElementById("replay").onclick = replayText;
 
 // ---- Previews ----

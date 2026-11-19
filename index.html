@@ -63,9 +63,16 @@
 
       <fieldset data-field="partner">
         <legend><span class="sect">Partner logo</span></legend>
-        <label>Select partner <span class="hint">Search or select from list</span>
-          <input name="partnerSearch" type="text" list="partners" placeholder="Type to search...">
-          <datalist id="partners"></datalist>
+        <div class="entry">
+          <div class="logo-preview" id="partnerPreview"></div>
+          <div class="file-row">
+            <button type="button" class="btn small" id="partnerLibrary">Choose logo</button>
+            <label class="btn ghost small file">Upload logo<input type="file" accept="image/svg+xml,image/png" data-image="partner" hidden></label>
+            <button type="button" class="btn ghost small" data-clear="partner">Remove logo</button>
+          </div>
+        </div>
+        <label>Logo size <output id="partnerScaleValue"></output>
+          <input name="partnerScale" type="range" min="50" max="150" step="5">
         </label>
       </fieldset>
 
@@ -75,6 +82,9 @@
           <input name="cohostLabel" type="text">
         </label>
         <div id="cohosts" class="stack"></div>
+        <label>Logo size <output id="cohostScaleValue"></output>
+          <input name="cohostScale" type="range" min="50" max="150" step="5">
+        </label>
       </fieldset>
 
       <fieldset data-field="speakers">
@@ -131,11 +141,19 @@
         </div>
         <div class="view"><canvas id="main" width="1080" height="1080"></canvas></div>
       </div>
-      <div class="others" id="others"></div>
     </section>
   </main>
 
+  <dialog class="library" id="library">
+    <div class="library-top">
+      <input type="search" placeholder="Search logos" aria-label="Search logos">
+      <button type="button" class="btn ghost" data-close>Close</button>
+    </div>
+    <div class="library-grid"></div>
+  </dialog>
+
   <script src="assets.js"></script>
+  <script src="logos.js"></script>
   <script src="terrain-gl.js"></script>
   <script src="app.js"></script>
 </body>

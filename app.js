@@ -75,9 +75,17 @@ const state = {
   template: "event",
   variant: { event: "cohosts", model: "list", partner: "horizontal" },
   copy: structuredClone(DEFAULT_COPY),
-  partner: { name: "Anthropic", img: null },
+  partner: { name: "Nvidia", file: "nvidia.svg", img: null }, // placeholder until replaced
+  partnerScale: 100, // partner logo size, % of the layout's default
+  cohostScale: 100, // cohost logo size, % of the layout's default
   cohostLabel: "Cohosted with",
-  cohosts: [{ name: "Bright Data" }, { name: "Box" }, { name: "OpenHands" }, { name: "" }],
+  // Cohosts are always logos; these three from the library are placeholders until they're replaced.
+  cohosts: [
+    { name: "Bright Data", file: "bright-data.svg", img: null },
+    { name: "Hugging Face", file: "hugging-face.svg", img: null },
+    { name: "Mistral", file: "mistral.svg", img: null },
+    { name: "", img: null },
+  ],
   speakers: [
     { label: "Instructor", name: "Jordan Lee", title: "AI/ML Engineer", img: null },
     { label: "Featured speaker", name: "Sam Rivera", title: "SVP of AI", img: null },
@@ -178,22 +186,13 @@ function drawLogo(ctx, x, y, h, align = "left") {
   return w;
 }
 
-// A partner or cohost mark: their logo if one was added, otherwise their name set in type.
+// A partner or cohost logo; nothing is drawn until one is added.
 function markWidth(ctx, mark, h) {
-  if (mark.img) return h * (mark.img.width / mark.img.height || 3);
-  font(ctx, 600, h, SANS, -h * 0.03);
-  return ctx.measureText(mark.name).width;
+  return mark.img ? h * (mark.img.width / mark.img.height || 3) : 0;
 }
 function drawMark(ctx, mark, x, cy, h) {
   const w = markWidth(ctx, mark, h);
-  el(ctx, () => {
-    if (mark.img) ctx.drawImage(mark.img, x, cy - h / 2, w, h);
-    else {
-      ctx.fillStyle = COLOR.ink;
-      ctx.textAlign = "left";
-      ctx.fillText(mark.name, x, cy + h * 0.36);
-    }
-  });
+  if (mark.img) el(ctx, () => ctx.drawImage(mark.img, x, cy - h / 2, w, h));
   return w;
 }
 
@@ -468,24 +467,43 @@ const LAYOUTS = {
         ctx.translate(ox * (1 - k), oy * (1 - k));
         ctx.scale(k, k);
       }
-      const lh = wide() ? 73 : 58;
-      drawLogo(ctx, W / 2, 125 + (73 - lh) / 2, lh, "center");
-      const top = wide() ? 92 : 76;
-      const { lines, size } = fit(ctx, copy.headline, { weight: 400, size: top, min: 48, maxWidth: wide() ? 1250 : 950, maxLines: 3, tracking: -0.01 });
-      ctx.fillStyle = COLOR.ink;
-      const last = drawLines(ctx, lines, W / 2, (wide() ? 330 : 310) - (top - size) * 0.6, size * 1.13, "center");
-      const bottom = drawPills(ctx, pillsOf(copy), { x: W / 2, top: last + 72, maxWidth: room, align: "center", h: 70, size: 28, padX: 36, gap: 26, rowGap: 26 });
-      const marks = state.cohosts.filter((m) => m.img || m.name.trim());
-      if (!marks.length) return;
-      // Square: the cohosts sit along the bottom. Landscape: they follow the pills.
-      const ly = wide() ? bottom + 130 : 802;
-      label(ctx, state.cohostLabel, W / 2, ly, { size: 24, tracking: 0.06, align: "center" });
-      // Logos share one row; they get smaller if there are many.
-      let h = 46, total;
-      const gap = 64;
-      do { total = marks.reduce((s, m) => s + markWidth(ctx, m, h), 0) + gap * (marks.length - 1); } while (total > room && (h -= 2) > 24);
-      let x = W / 2 - total / 2;
-      marks.forEach((m) => { x += drawMark(ctx, m, x, ly + 83, h) + gap; });
+      const lh = wide() ? 73 : 58, logoBottom = 125 + (73 - lh) / 2 + lh;
+      drawLogo(ctx, W / 2, logoBottom - lh, lh, "center");
+      // A headline that fits on one line is set larger; longer ones shrink to fit three lines.
+      const top = wide() ? 92 : 76, opts = { weight: 400, min: 48, maxWidth: wide() ? 1250 : 950, maxLines: 3, tracking: -0.01 };
+      let { lines, size } = fit(ctx, copy.headline, { ...opts, size: top });
+      if (lines.length === 1) ({ lines, size } = fit(ctx, copy.headline, { ...opts, size: wide() ? 124 : 108, min: top, maxLines: 1 }));
+      // Headline, pills and cohosts, starting `y` below the logo; returns the bottom of the last thing drawn.
+      const body = (y) => {
+        ctx.fillStyle = COLOR.ink;
+        const last = drawLines(ctx, lines, W / 2, y + size * 0.73, size * 1.13, "center");
+        const bottom = drawPills(ctx, pillsOf(copy), { x: W / 2, top: last + 72, maxWidth: room, align: "center", h: 70, size: 28, padX: 36, gap: 26, rowGap: 26 });
+        const marks = state.cohosts.filter((m) => m.img);
+        if (!marks.length) return bottom;
+        // The cohosts follow the pills, so they move up with a short headline and down with a long one.
+        const ly = bottom + 130;
+        label(ctx, state.cohostLabel, W / 2, ly, { size: 24, tracking: 0.06, align: "center" });
+        // Logos share one row; they get smaller if there are many.
+        let h = 46 * state.cohostScale / 100, total;
+        const gap = 64;
+        do { total = marks.reduce((s, m) => s + markWidth(ctx, m, h), 0) + gap * (marks.length - 1); } while (total > room && (h -= 2) > 24);
+        let x = W / 2 - total / 2;
+        marks.forEach((m) => { x += drawMark(ctx, m, x, ly + 83, h) + gap; });
+        return ly + 83 + h / 2;
+      };
+      let y = logoBottom + 65;
+      // One-line headlines: measure the block invisibly, then center it between the logo and the matching bottom margin.
+      if (lines.length === 1) {
+        const i = reveal.i;
+        ctx.save();
+        ctx.globalAlpha = 0;
+        const end = body(y);
+        ctx.restore();
+        reveal.i = i;
+        const space = H - (logoBottom - lh) - logoBottom;
+        y = Math.max(y, logoBottom + (space - (end - y)) / 2);
+      }
+      body(y);
     },
     speaker(ctx, copy) { eventWithSpeakers(ctx, copy, 1); },
     speakers(ctx, copy) { eventWithSpeakers(ctx, copy, 2); },
@@ -521,8 +539,8 @@ const LAYOUTS = {
   },
   partner: {
     horizontal(ctx) {
-      const h = 82, gap = 46;
-      const pw = markWidth(ctx, state.partner, h * 0.95), dw = h * LOGO_RATIO;
+      const h = 63, gap = 46;
+      const ph = h * 0.95 * state.partnerScale / 100, pw = markWidth(ctx, state.partner, ph), dw = h * LOGO_RATIO;
       font(ctx, 300, 44, SANS);
       const xw = ctx.measureText("×").width;
       let x = W / 2 - (dw + gap + xw + gap + pw) / 2;
@@ -531,20 +549,20 @@ const LAYOUTS = {
       font(ctx, 300, 44, SANS);
       ctx.fillStyle = COLOR.ink; ctx.textAlign = "left";
       el(ctx, () => ctx.fillText("×", x, 540 + 15));
-      drawMark(ctx, state.partner, x + xw + gap, 540, h * 0.95);
+      drawMark(ctx, state.partner, x + xw + gap, 540, ph);
     },
     vertical(ctx) {
-      drawLogo(ctx, W / 2, 340, 99, "center");
+      drawLogo(ctx, W / 2, 340, 90, "center");
       font(ctx, 300, 60, SANS);
       ctx.fillStyle = COLOR.ink; ctx.textAlign = "center";
       el(ctx, () => ctx.fillText("×", W / 2, 540 + 21));
-      const h = 90, w = markWidth(ctx, state.partner, h);
+      const h = 82 * state.partnerScale / 100, w = markWidth(ctx, state.partner, h);
       drawMark(ctx, state.partner, W / 2 - w / 2, 690, h);
     },
     promo(ctx, copy) {
       const bw = wide() ? 1300 : 890, bx = (W - bw) / 2, inner = bw - 150;
       drawBox(ctx, bx, 120, bw, 835);
-      const h = 56, gap = 26, pw = markWidth(ctx, state.partner, h * 0.95), dw = h * LOGO_RATIO;
+      const h = 56, gap = 26, ph = h * 0.95 * state.partnerScale / 100, pw = markWidth(ctx, state.partner, ph), dw = h * LOGO_RATIO;
       font(ctx, 300, 40, SANS);
       const xw = ctx.measureText("×").width;
       let x = W / 2 - (dw + gap + xw + gap + pw) / 2;
@@ -553,7 +571,7 @@ const LAYOUTS = {
       font(ctx, 300, 40, SANS);
       ctx.fillStyle = COLOR.ink; ctx.textAlign = "left";
       el(ctx, () => ctx.fillText("×", x, 240 + 14));
-      drawMark(ctx, state.partner, x + xw + gap, 240, h * 0.95);
+      drawMark(ctx, state.partner, x + xw + gap, 240, ph);
       divider(ctx, bx + 70, bx + bw - 70, 324);
       const { lines, size } = fit(ctx, copy.headline, { weight: 500, size: 132, min: 64, maxWidth: inner, maxLines: 2, tracking: -0.01 });
       ctx.fillStyle = COLOR.ink;
@@ -624,7 +642,6 @@ function replayText() {
 
 // ---- Images ----
 const IMG = { logo: null };
-let PARTNERS = [];
 function loadImage(src) {
   return new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = src; });
 }
@@ -642,7 +659,6 @@ async function imageFromFile(file) {
 // ---- Controls ----
 const form = document.getElementById("controls");
 const mainCanvas = document.getElementById("main");
-const others = document.getElementById("others");
 
 const variantInfo = () => TEMPLATES[state.template].variants[state.variant[state.template]];
 
@@ -663,7 +679,11 @@ function syncControls() {
   // Show only the fields this layout uses.
   form.querySelectorAll("[data-field]").forEach((el) => { el.hidden = !info.fields.includes(el.dataset.field); });
   ["eyebrow", "title", "headline", "label", "pills"].forEach((k) => { form.elements[k].value = copy[k] ?? ""; });
-  form.elements.partnerSearch.value = state.partner.name;
+  showLogo(document.getElementById("partnerPreview"), state.partner);
+  for (const k of ["partnerScale", "cohostScale"]) {
+    form.elements[k].value = state[k];
+    document.getElementById(`${k}Value`).textContent = `${state[k]}%`;
+  }
   form.elements.cohostLabel.value = state.cohostLabel;
   form.elements.seed.value = state.seed;
   form.elements.shade.value = state.shade;
@@ -684,7 +704,7 @@ function syncControls() {
 }
 
 // Cohost and speaker cards.
-function entry(title, inputs, onImage) {
+function entry(title, inputs, onImage, onClear) {
   const box = document.createElement("div");
   box.className = "entry";
   const top = document.createElement("div");
@@ -699,7 +719,10 @@ function entry(title, inputs, onImage) {
   file.type = "file"; file.accept = onImage.accept; file.hidden = true;
   file.onchange = async () => { if (file.files[0]) { await onImage.set(await imageFromFile(file.files[0])); render(); } file.value = ""; };
   up.append(file);
-  row.append(up);
+  const clear = document.createElement("button");
+  clear.type = "button"; clear.className = "btn ghost small"; clear.textContent = onClear.label;
+  clear.onclick = () => { onClear.run(); render(); };
+  row.append(up, clear);
   box.append(top, ...inputs, row);
   return box;
 }
@@ -709,14 +732,60 @@ function textInput(value, placeholder, set) {
   i.oninput = () => { set(i.value); render(); };
   return i;
 }
-document.getElementById("cohosts").append(...state.cohosts.map((m, i) => entry(`Cohost ${i + 1}`,
-  [textInput(m.name, "Name, shown as text until you add a logo", (v) => { m.name = v; })],
-  { label: "Upload logo", accept: "image/svg+xml,image/png", set: (img) => { m.img = img; } })));
+// A logo preview on the post color, or an empty box until a logo is added.
+function showLogo(preview, mark) {
+  if (preview.firstChild?.src === mark.img?.src) return;
+  preview.replaceChildren();
+  if (mark.img) {
+    const img = new Image();
+    img.src = mark.img.src;
+    img.alt = mark.name;
+    preview.append(img);
+  } else preview.append(Object.assign(document.createElement("span"), { textContent: "No logo" }));
+  preview.classList.toggle("empty", !mark.img);
+}
+
+// Cohost cards: a preview of the logo on the post color, then choose, upload or remove it.
+document.getElementById("cohosts").append(...state.cohosts.map((m, i) => {
+  const box = document.createElement("div");
+  box.className = "entry";
+  const top = document.createElement("div");
+  top.className = "entry-top";
+  top.append(`Cohost ${i + 1}`);
+  const preview = document.createElement("div");
+  preview.className = "logo-preview";
+  const show = () => showLogo(preview, m);
+  const row = document.createElement("div");
+  row.className = "file-row";
+  const pick = document.createElement("button");
+  pick.type = "button"; pick.className = "btn small"; pick.textContent = "Choose logo";
+  pick.onclick = () => chooseLogo((img, n) => { m.img = img; m.name = n; show(); render(); });
+  const up = document.createElement("label");
+  up.className = "btn ghost small file";
+  up.textContent = "Upload logo";
+  const file = document.createElement("input");
+  file.type = "file"; file.accept = "image/svg+xml,image/png"; file.hidden = true;
+  file.onchange = async () => {
+    const f = file.files[0];
+    if (f) { m.img = await imageFromFile(f); m.name = f.name.replace(/\.[^.]+$/, ""); show(); render(); }
+    file.value = "";
+  };
+  up.append(file);
+  const clear = document.createElement("button");
+  clear.type = "button"; clear.className = "btn ghost small"; clear.textContent = "Remove logo";
+  clear.onclick = () => { m.img = null; m.name = ""; show(); render(); };
+  row.append(pick, up, clear);
+  box.append(top, preview, row);
+  m.show = show;
+  show();
+  return box;
+}));
 document.getElementById("speakers").append(...state.speakers.map((sp, i) => entry(`Speaker ${i + 1}`,
   [textInput(sp.label, "Role, like Instructor", (v) => { sp.label = v; }),
    textInput(sp.name, "Name", (v) => { sp.name = v; }),
    textInput(sp.title, "Title", (v) => { sp.title = v; })],
-  { label: "Upload photo", accept: "image/*", set: (img) => { sp.img = img; } })));
+  { label: "Upload photo", accept: "image/*", set: (img) => { sp.img = img; } },
+  { label: "Remove photo", run: () => { sp.img = null; } })));
 
 form.querySelectorAll("[data-group] button").forEach((b) => {
   b.addEventListener("click", () => {
@@ -731,31 +800,81 @@ form.querySelectorAll("[data-group] button").forEach((b) => {
 form.addEventListener("input", (e) => {
   const { name, value } = e.target;
   if (["eyebrow", "title", "headline", "label", "pills"].includes(name)) state.copy[state.template][name] = value;
-  else if (name === "partnerSearch") {
-    // Check if the value matches a partner in our list
-    const partner = PARTNERS.find(p => p.name.toLowerCase() === value.toLowerCase());
-    if (partner) {
-      state.partner.name = partner.name;
-      // Load the partner logo
-      loadImage(`assets/partner-logos/${partner.id}.svg`).then(img => {
-        state.partner.img = img;
-        render();
-      }).catch(() => {
-        // If logo fails to load, just use text
-        state.partner.img = null;
-        render();
-      });
-    } else {
-      // Use typed value as text
-      state.partner.name = value;
-      state.partner.img = null;
-    }
-  }
   else if (name === "cohostLabel") state.cohostLabel = value;
-  else if (["seed", "shade", "speed", "clip"].includes(name)) { state[name] = +value; syncControls(); }
+  else if (["seed", "shade", "speed", "clip", "partnerScale", "cohostScale"].includes(name)) { state[name] = +value; syncControls(); }
   else return;
   render();
 });
+form.querySelectorAll("[data-image]").forEach((input) => {
+  input.addEventListener("change", async () => {
+    const f = input.files[0];
+    if (!f) return;
+    const img = await imageFromFile(f);
+    if (input.dataset.image === "partner") { state.partner.img = img; state.partner.name = f.name.replace(/\.[^.]+$/, ""); }
+    input.value = "";
+    syncControls();
+    render();
+  });
+});
+form.querySelector('[data-clear="partner"]').onclick = () => { state.partner.img = null; state.partner.name = ""; syncControls(); render(); };
+document.getElementById("partnerLibrary").onclick = () => chooseLogo((img, name) => {
+  state.partner.img = img;
+  state.partner.name = name;
+  syncControls();
+  render();
+});
+
+// Each section folds open or closed from its heading.
+form.querySelectorAll("fieldset").forEach((fs) => {
+  const legend = fs.querySelector("legend");
+  const body = document.createElement("div");
+  body.className = "section-body";
+  body.append(...[...fs.children].filter((c) => c !== legend));
+  fs.append(body);
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "section-toggle";
+  toggle.setAttribute("aria-expanded", "true");
+  toggle.append(...legend.childNodes);
+  legend.append(toggle);
+  toggle.onclick = () => {
+    const open = fs.classList.toggle("collapsed") === false;
+    toggle.setAttribute("aria-expanded", String(open));
+  };
+});
+
+// Logo library: pick a logo from logos/ (see logos.js); `apply` gets the loaded image and the brand name.
+const library = document.getElementById("library");
+let libraryApply = null;
+function chooseLogo(apply) {
+  libraryApply = apply;
+  const grid = library.querySelector(".library-grid"), search = library.querySelector("input");
+  if (!grid.children.length) {
+    grid.append(...LOGO_LIBRARY.map(({ name, file }) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.name = name.toLowerCase();
+      b.innerHTML = `<div class="tile"><img loading="lazy" alt=""></div><span></span>`;
+      b.querySelector("img").src = `logos/${file}`;
+      b.querySelector("span").textContent = name;
+      b.onclick = async () => {
+        const img = await loadImage(`logos/${file}`);
+        library.close();
+        libraryApply?.(img, name);
+      };
+      return b;
+    }));
+    search.oninput = () => {
+      const q = search.value.trim().toLowerCase();
+      for (const b of grid.children) b.hidden = !!q && !b.dataset.name.includes(q);
+    };
+  }
+  search.value = "";
+  search.oninput();
+  library.showModal();
+  search.focus();
+}
+library.querySelector("[data-close]").onclick = () => library.close();
+library.addEventListener("click", (e) => { if (e.target === library) library.close(); });
 document.getElementById("replay").onclick = replayText;
 
 // ---- Previews ----
@@ -796,21 +915,6 @@ function render() {
     sizeCanvas(mainCanvas);
     draw(mainCanvas, t, v);
     document.getElementById("mainLabel").innerHTML = `<b>${TEMPLATES[t].name}</b> · ${TEMPLATES[t].variants[v].name} · ${W} × ${H}`;
-    const keys = Object.keys(TEMPLATES[t].variants).filter((k) => k !== v);
-    while (others.children.length > keys.length) others.lastChild.remove();
-    keys.forEach((k, i) => {
-      let card = others.children[i];
-      if (!card) {
-        card = document.createElement("div");
-        card.className = "canvas";
-        card.innerHTML = '<div class="cbar"><span class="k"></span></div><div class="view"><canvas width="1080" height="1080"></canvas></div>';
-        others.append(card);
-      }
-      card.querySelector(".k").textContent = TEMPLATES[t].variants[k].name;
-      card.onclick = () => { state.variant[t] = k; syncControls(); render(); };
-      sizeCanvas(card.querySelector("canvas"));
-      draw(card.querySelector("canvas"), t, k);
-    });
   });
 }
 
@@ -913,27 +1017,9 @@ addEventListener("hashchange", () => { fromHash(); syncControls(); render(); });
   const at = /[?&]t=([\d.]+)/.exec(location.search);
   if (at) { animTime = +at[1] * state.clip; animFixed = true; }
   fromHash();
-
-  // Load partners list
-  try {
-    const response = await fetch("assets/partners.json");
-    PARTNERS = await response.json();
-    const datalist = document.getElementById("partners");
-    PARTNERS.forEach(p => {
-      const option = document.createElement("option");
-      option.value = p.name;
-      datalist.appendChild(option);
-    });
-    // Load default partner logo
-    const defaultPartner = PARTNERS.find(p => p.name === state.partner.name);
-    if (defaultPartner) {
-      state.partner.img = await loadImage(`assets/partner-logos/${defaultPartner.id}.svg`);
-    }
-  } catch (e) {
-    console.warn("Could not load partners list:", e);
-  }
-
   IMG.logo = await loadImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(LOGOS.digitalocean.replace(/width="[^"]*" height="[^"]*"/, 'width="1261" height="210"')));
+  await Promise.all(state.cohosts.filter((m) => m.file).map(async (m) => { m.img = await loadImage(`logos/${m.file}`); m.show(); }));
+  state.partner.img = await loadImage(`logos/${state.partner.file}`);
   await Promise.all(["400 40px Inter", "500 40px Inter", "600 40px Inter", "300 40px Inter", '400 20px "IBM Plex Mono"'].map((f) => document.fonts.load(f)));
   syncControls();
   render();

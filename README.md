@@ -10,7 +10,10 @@ download a 1080 × 1080 (square) or 1920 × 1080 (landscape) PNG or a looping vi
 | Model launch | List, Spotlight                       |
 | Partnership  | Side by side, Stacked, Promo          |
 
-Partner and cohost names are set in type until you upload their logo (SVG or PNG).
+Partner and cohost marks are always logos (library logos as placeholders), each with a **Logo size**
+slider (50–150%). For either, **Choose logo** picks one of the
+272 white logos in `logos/` (exported from the shared Logos library in Figma, listed in `logos.js`), or
+**Upload logo** takes your own SVG or PNG.
 
 The background is a terrain drawn in code (Static); Animated flies slowly over it or turns it on a turntable
 (`terrain-gl.js`, WebGL), and **Download MP4** records one clip (5–25 seconds) in real time (WebM in

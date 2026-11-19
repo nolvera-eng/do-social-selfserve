@@ -63,12 +63,10 @@
 
       <fieldset data-field="partner">
         <legend><span class="sect">Partner logo</span></legend>
-        <label>Partner name <span class="hint">Shown as text until you add a logo</span>
-          <input name="partnerName" type="text">
+        <label>Select partner <span class="hint">Search or select from list</span>
+          <input name="partnerSearch" type="text" list="partners" placeholder="Type to search...">
+          <datalist id="partners"></datalist>
         </label>
-        <div class="file-row">
-          <label class="btn ghost file">Upload logo<input type="file" accept="image/svg+xml,image/png" data-image="partner" hidden></label>
-        </div>
       </fieldset>
 
       <fieldset data-field="cohosts">

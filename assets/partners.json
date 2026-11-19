@@ -1,0 +1,22 @@
+[
+  { "name": "Accuknox", "id": "accuknox" },
+  { "name": "Airtable", "id": "airtable" },
+  { "name": "Amplication", "id": "amplication" },
+  { "name": "Ant Media", "id": "ant-media" },
+  { "name": "Anthropic", "id": "anthropic" },
+  { "name": "Appwrite", "id": "appwrite" },
+  { "name": "Browserless", "id": "browserless" },
+  { "name": "Bunnyshell", "id": "bunnyshell" },
+  { "name": "Chargebee", "id": "chargebee" },
+  { "name": "CloudInit", "id": "cloudinit" },
+  { "name": "CodeConductor", "id": "codeconductor" },
+  { "name": "DagsHub", "id": "dagshub" },
+  { "name": "DeepSeek", "id": "deepseek" },
+  { "name": "DigitalOcean", "id": "digitalocean" },
+  { "name": "Drupal", "id": "drupal" },
+  { "name": "Galileo", "id": "galileo" },
+  { "name": "HackTheBox", "id": "hackthebox" },
+  { "name": "LangChain", "id": "langchain" },
+  { "name": "Meta", "id": "meta" },
+  { "name": "WordPress", "id": "wordpress" }
+]

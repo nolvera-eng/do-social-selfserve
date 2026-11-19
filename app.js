@@ -75,7 +75,7 @@ const state = {
   template: "event",
   variant: { event: "cohosts", model: "list", partner: "horizontal" },
   copy: structuredClone(DEFAULT_COPY),
-  partner: { name: "Vercel", img: null },
+  partner: { name: "Anthropic", img: null },
   cohostLabel: "Cohosted with",
   cohosts: [{ name: "Bright Data" }, { name: "Box" }, { name: "OpenHands" }, { name: "" }],
   speakers: [
@@ -624,6 +624,7 @@ function replayText() {
 
 // ---- Images ----
 const IMG = { logo: null };
+let PARTNERS = [];
 function loadImage(src) {
   return new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = reject; i.src = src; });
 }
@@ -662,7 +663,7 @@ function syncControls() {
   // Show only the fields this layout uses.
   form.querySelectorAll("[data-field]").forEach((el) => { el.hidden = !info.fields.includes(el.dataset.field); });
   ["eyebrow", "title", "headline", "label", "pills"].forEach((k) => { form.elements[k].value = copy[k] ?? ""; });
-  form.elements.partnerName.value = state.partner.name;
+  form.elements.partnerSearch.value = state.partner.name;
   form.elements.cohostLabel.value = state.cohostLabel;
   form.elements.seed.value = state.seed;
   form.elements.shade.value = state.shade;
@@ -730,21 +731,30 @@ form.querySelectorAll("[data-group] button").forEach((b) => {
 form.addEventListener("input", (e) => {
   const { name, value } = e.target;
   if (["eyebrow", "title", "headline", "label", "pills"].includes(name)) state.copy[state.template][name] = value;
-  else if (name === "partnerName") state.partner.name = value;
+  else if (name === "partnerSearch") {
+    // Check if the value matches a partner in our list
+    const partner = PARTNERS.find(p => p.name.toLowerCase() === value.toLowerCase());
+    if (partner) {
+      state.partner.name = partner.name;
+      // Load the partner logo
+      loadImage(`assets/partner-logos/${partner.id}.svg`).then(img => {
+        state.partner.img = img;
+        render();
+      }).catch(() => {
+        // If logo fails to load, just use text
+        state.partner.img = null;
+        render();
+      });
+    } else {
+      // Use typed value as text
+      state.partner.name = value;
+      state.partner.img = null;
+    }
+  }
   else if (name === "cohostLabel") state.cohostLabel = value;
   else if (["seed", "shade", "speed", "clip"].includes(name)) { state[name] = +value; syncControls(); }
   else return;
   render();
-});
-form.querySelectorAll("[data-image]").forEach((input) => {
-  input.addEventListener("change", async () => {
-    const f = input.files[0];
-    if (!f) return;
-    const img = await imageFromFile(f);
-    if (input.dataset.image === "partner") state.partner.img = img;
-    input.value = "";
-    render();
-  });
 });
 document.getElementById("replay").onclick = replayText;
 
@@ -903,6 +913,26 @@ addEventListener("hashchange", () => { fromHash(); syncControls(); render(); });
   const at = /[?&]t=([\d.]+)/.exec(location.search);
   if (at) { animTime = +at[1] * state.clip; animFixed = true; }
   fromHash();
+
+  // Load partners list
+  try {
+    const response = await fetch("assets/partners.json");
+    PARTNERS = await response.json();
+    const datalist = document.getElementById("partners");
+    PARTNERS.forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.name;
+      datalist.appendChild(option);
+    });
+    // Load default partner logo
+    const defaultPartner = PARTNERS.find(p => p.name === state.partner.name);
+    if (defaultPartner) {
+      state.partner.img = await loadImage(`assets/partner-logos/${defaultPartner.id}.svg`);
+    }
+  } catch (e) {
+    console.warn("Could not load partners list:", e);
+  }
+
   IMG.logo = await loadImage("data:image/svg+xml;charset=utf-8," + encodeURIComponent(LOGOS.digitalocean.replace(/width="[^"]*" height="[^"]*"/, 'width="1261" height="210"')));
   await Promise.all(["400 40px Inter", "500 40px Inter", "600 40px Inter", "300 40px Inter", '400 20px "IBM Plex Mono"'].map((f) => document.fonts.load(f)));
   syncControls();
